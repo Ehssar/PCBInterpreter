@@ -1,0 +1,32 @@
+# =========================
+# Unity
+# =========================
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+Logs/
+UserSettings/
+MemoryCaptures/
+
+# Unity generated
+*.csproj
+*.unityproj
+*.sln
+*.user
+*.pidb
+*.booproj
+
+# =========================
+# Python
+# =========================
+backend/venv/
+backend/__pycache__/
+*.pyc
+
+# =========================
+# OS
+# =========================
+.DS_Store
+Thumbs.db
