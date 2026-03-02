@@ -2,7 +2,33 @@ using System.Collections;
 using System.Text;
 using UnityEngine;
 using UnityEngine.Networking;
+public static class TextureUtils
+{
+    public static Texture2D ToReadableRGB24(Texture source)
+    {
+        if (source == null) return null;
 
+        int w = source.width;
+        int h = source.height;
+
+        // RenderTexture is uncompressed GPU buffer we can read back
+        var rt = RenderTexture.GetTemporary(w, h, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Linear);
+        Graphics.Blit(source, rt);
+
+        var prev = RenderTexture.active;
+        RenderTexture.active = rt;
+
+        // Read back into a CPU Texture2D with a supported format
+        var tex = new Texture2D(w, h, TextureFormat.RGB24, false);
+        tex.ReadPixels(new Rect(0, 0, w, h), 0, 0);
+        tex.Apply(false, false);
+
+        RenderTexture.active = prev;
+        RenderTexture.ReleaseTemporary(rt);
+
+        return tex;
+    }
+}
 public class AnalyzeClient : MonoBehaviour
 {
     [Header("Backend")]
@@ -28,7 +54,7 @@ public class AnalyzeClient : MonoBehaviour
     private IEnumerator UploadAndAnalyze()
     {
         // 1) Choose an image source
-        Texture2D tex = null;
+        Texture tex = null;
 
         if (testTexture != null)
         {
@@ -36,9 +62,7 @@ public class AnalyzeClient : MonoBehaviour
         }
         else if (webcam != null && webcam.isPlaying && webcam.width > 16)
         {
-            tex = new Texture2D(webcam.width, webcam.height, TextureFormat.RGB24, false);
-            tex.SetPixels(webcam.GetPixels());
-            tex.Apply();
+            tex = webcam;
         }
         else
         {
@@ -46,15 +70,26 @@ public class AnalyzeClient : MonoBehaviour
             yield break;
         }
 
-        // 2) Encode to JPG 
-        byte[] jpgBytes = tex.EncodeToJPG(90);
+        // 2) Convert to CPU-readable RGB24 
+        Texture2D readable = TextureUtils.ToReadableRGB24(tex);
+        if (readable == null)
+        {
+            Debug.LogError("Failed to convert texture to readable RGB24.");
+            yield break;
+        }
+
+        // 3)Encode to JPG
+        byte[] jpgBytes = readable.EncodeToJPG(90);
+
+        Destroy(readable); // free CPU memory since we don't need it anymore
+
         if (jpgBytes == null || jpgBytes.Length == 0)
         {
             Debug.LogError("Failed to encode JPG.");
             yield break;
         }
 
-        // 3) Build multipart form-data request
+        // 4) Build multipart form-data request
         WWWForm form = new WWWForm();
         form.AddBinaryData("file", jpgBytes, "frame.jpg", "image/jpeg");
 
@@ -74,7 +109,7 @@ public class AnalyzeClient : MonoBehaviour
             string json = req.downloadHandler.text;
             Debug.Log("Analyze response JSON:\n" + json);
 
-            // 4) Parse
+            // 5) Parse
             AnalyzeResponse parsed = JsonUtility.FromJson<AnalyzeResponse>(json);
             if (parsed == null || parsed.components == null)
             {
@@ -82,7 +117,7 @@ public class AnalyzeClient : MonoBehaviour
                 yield break;
             }
 
-            // 5) Use results
+            // 6) Use results
             foreach (var comp in parsed.components)
             {
                 Debug.Log($"Component {comp.component_id} type={comp.type} conf={comp.confidence}");
@@ -94,6 +129,14 @@ public class AnalyzeClient : MonoBehaviour
                         Debug.Log($"  candidate {cand.part_number} conf={cand.confidence} url={cand.datasheet_url}");
                 }
             }
+        }
+    }
+
+    private void OnDisable()
+    {
+        if (webcam != null && webcam.isPlaying)
+        {
+            webcam.Stop();
         }
     }
 }
