@@ -10,6 +10,12 @@ public class FrameCaptureAndSend : MonoBehaviour
 
     private float lastSendTime = -999f;
 
+    [ContextMenu("Send One Frame")]
+    private void SendOneFrame()
+    {
+        StartCoroutine(CaptureAndSend());
+    }
+
     void Update()
     {
         // Use a button you like; this is common on Quest controllers
