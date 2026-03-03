@@ -4,12 +4,30 @@ using UnityEngine.Networking;
 
 public class FrameCaptureAndSend : MonoBehaviour
 {
-    [SerializeField] private string baseUrl = "http://192.168.1.23:8000";
+    [Header("Backend")]
+    [SerializeField] private string editorHost = "127.0.0.1";
+    [SerializeField] private string androidHost = "10.8.157.134";
+    [SerializeField] private int port = 8000;
+    // [SerializeField] private string analyzePath = "/analyze";
+
+    [Header("Capture")]
     [SerializeField] private int jpegQuality = 75;
     [SerializeField] private float minSecondsBetweenSends = 1.0f;
 
     private float lastSendTime = -999f;
 
+    // Allow overriding host for editor for testing without hardware
+    private string BaseUrl =>
+#if UNITY_ANDROID && !UNITY_EDITOR
+        $"http://{androidHost}:{port}";
+#else
+        $"http://{editorHost}:{port}";
+#endif
+
+    // private string AnalyzeUrl => BaseUrl + analyzePath;
+
+
+    // Added for testing in editor without needing to press the button
     [ContextMenu("Send One Frame")]
     private void SendOneFrame()
     {
@@ -48,7 +66,7 @@ public class FrameCaptureAndSend : MonoBehaviour
         var form = new WWWForm();
         form.AddBinaryData("file", jpg, "frame.jpg", "image/jpeg");
 
-        using var req = UnityWebRequest.Post($"{baseUrl}/analyze", form);
+        using var req = UnityWebRequest.Post($"{BaseUrl}/analyze", form);
         req.timeout = 10;
 
         yield return req.SendWebRequest();
