@@ -32,7 +32,7 @@ public static class TextureUtils
 public class AnalyzeClient : MonoBehaviour
 {
     [Header("Backend")]
-    [SerializeField] private string analyzeUrl = "http://127.0.0.1:8000/analyze";
+    [SerializeField] private string analyzeUrl = "https://kip-unerasing-twitchily.ngrok-free.dev/analyze";
 
     [Header("Input")]
     [Tooltip("If set, we'll upload this texture. Otherwise we'll try webcam.")]

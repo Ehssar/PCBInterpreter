@@ -6,7 +6,7 @@ public class FrameCaptureAndSend : MonoBehaviour
 {
     [Header("Backend")]
     [SerializeField] private string editorHost = "127.0.0.1";
-    [SerializeField] private string androidHost = "10.8.157.134";
+    [SerializeField] private string androidHost = "https://kip-unerasing-twitchily.ngrok-free.dev";
     [SerializeField] private int port = 8000;
     // [SerializeField] private string analyzePath = "/analyze";
 
@@ -19,7 +19,7 @@ public class FrameCaptureAndSend : MonoBehaviour
     // Allow overriding host for editor for testing without hardware
     private string BaseUrl =>
 #if UNITY_ANDROID && !UNITY_EDITOR
-        $"http://{androidHost}:{port}";
+        androidHost;
 #else
         $"http://{editorHost}:{port}";
 #endif

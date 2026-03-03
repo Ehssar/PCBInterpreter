@@ -1,12 +1,12 @@
 {
   "dependencies": {
     "com.meta.xr.mrutilitykit": "85.0.0",
-    "com.unity.ai.inference": "2.4.1",
+    "com.unity.ai.inference": "2.5.0",
     "com.unity.feature.development": "1.0.2",
-    "com.unity.mobile.android-logcat": "1.4.6",
+    "com.unity.mobile.android-logcat": "1.4.7",
     "com.unity.multiplayer.center": "1.0.1",
     "com.unity.ugui": "2.0.0",
-    "com.unity.xr.management": "4.5.3",
+    "com.unity.xr.management": "4.5.4",
     "com.unity.xr.openxr": "1.16.1",
     "com.unity.modules.accessibility": "1.0.0",
     "com.unity.modules.adaptiveperformance": "1.0.0",
