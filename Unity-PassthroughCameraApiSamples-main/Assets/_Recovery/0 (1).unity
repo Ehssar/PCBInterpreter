@@ -509,8 +509,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 462102557}
-  - component: {fileID: 462102556}
   - component: {fileID: 462102558}
+  - component: {fileID: 462102556}
   m_Layer: 0
   m_Name: BackendClient
   m_TagString: Untagged
@@ -525,7 +525,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 462102555}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e3cc92e9604351945b50f409cbabbe76, type: 3}
   m_Name: 
@@ -559,7 +559,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f320bc5f22e962a4482d94b4a8c5e3e6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FrameCaptureAndSend
-  baseUrl: http://192.168.1.23:8000
+  editorHost: 127.0.0.1
+  androidHost: https://kip-unerasing-twitchily.ngrok-free.dev
+  port: 8000
   jpegQuality: 75
   minSecondsBetweenSends: 1
 --- !u!1 &478312660
@@ -1467,9 +1469,9 @@ MonoBehaviour:
   requestBodyTrackingPermissionOnStartup: 0
   requestFaceTrackingPermissionOnStartup: 0
   requestEyeTrackingPermissionOnStartup: 0
-  requestScenePermissionOnStartup: 0
+  requestScenePermissionOnStartup: 1
   requestRecordAudioPermissionOnStartup: 0
-  requestPassthroughCameraAccessPermissionOnStartup: 0
+  requestPassthroughCameraAccessPermissionOnStartup: 1
   _localDimming: 1
   _trackingOriginType: 1
   usePositionTracking: 1

@@ -37,7 +37,7 @@ public class FrameCaptureAndSend : MonoBehaviour
     void Update()
     {
         // Use a button you like; this is common on Quest controllers
-        if (OVRInput.GetDown(OVRInput.Button.PrimaryIndexTrigger))
+        if (OVRInput.GetDown(OVRInput.Button.SecondaryHandTrigger))
         {
             if (Time.time - lastSendTime >= minSecondsBetweenSends)
             {

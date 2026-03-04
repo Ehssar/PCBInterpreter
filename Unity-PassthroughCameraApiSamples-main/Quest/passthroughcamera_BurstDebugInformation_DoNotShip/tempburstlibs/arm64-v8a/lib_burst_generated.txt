@@ -1,4 +1,4 @@
-Library: C:\Users\da5633\PCBInterpeter\Unity-PassthroughCameraApiSamples-main\Unity-PassthroughCameraApiSamples-main\Temp\BurstOutput\tempburstlibs\arm64-v8a\lib_burst_generated
+Library: C:\UnityProjects\PCBInterpeter\Unity-PassthroughCameraApiSamples-main\Temp\BurstOutput\tempburstlibs\arm64-v8a\lib_burst_generated
 --platform=Android
 --minimum-os-version=
 --backend=burst-llvm-19
@@ -9,11 +9,11 @@ Library: C:\Users\da5633\PCBInterpeter\Unity-PassthroughCameraApiSamples-main\Un
 --float-precision=Standard
 --target-framework=NetFramework
 --generate-link-xml=Temp\burst.link.xml
---temp-folder=C:\Users\da5633\PCBInterpeter\Unity-PassthroughCameraApiSamples-main\Unity-PassthroughCameraApiSamples-main\Temp\Burst
+--temp-folder=C:\UnityProjects\PCBInterpeter\Unity-PassthroughCameraApiSamples-main\Temp\Burst
 --debug=Full
 --key-folder=C:/Program Files/Unity/Hub/Editor/6000.3.10f1/Editor/Data/PlaybackEngines/AndroidPlayer
---decode-folder=C:\Users\da5633\PCBInterpeter\Unity-PassthroughCameraApiSamples-main\Unity-PassthroughCameraApiSamples-main\Library\Burst
---output=C:\Users\da5633\PCBInterpeter\Unity-PassthroughCameraApiSamples-main\Unity-PassthroughCameraApiSamples-main\Temp\BurstOutput\tempburstlibs\arm64-v8a\lib_burst_generated
+--decode-folder=C:\UnityProjects\PCBInterpeter\Unity-PassthroughCameraApiSamples-main\Library\Burst
+--output=C:\UnityProjects\PCBInterpeter\Unity-PassthroughCameraApiSamples-main\Temp\BurstOutput\tempburstlibs\arm64-v8a\lib_burst_generated
 --pdb-search-paths=Temp/ManagedSymbols/
 
 --method=Unity.InferenceEngine.IParallelForBatchExtensions+ParallelForBatchJobStruct`1[[Unity.InferenceEngine.CPUBackend+AddIntJob, Unity.InferenceEngine, Version=2.5.5.0, Culture=neutral, PublicKeyToken=null]], Unity.InferenceEngine, Version=2.5.5.0, Culture=neutral, PublicKeyToken=null::Execute(Unity.InferenceEngine.CPUBackend+AddIntJob&, Unity.InferenceEngine, Version=2.5.5.0, Culture=neutral, PublicKeyToken=null|System.IntPtr, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|System.IntPtr, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|Unity.Jobs.LowLevel.Unsafe.JobRanges&, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089)--59acb1a6bbdc5702ce87eb37fc08b9ae
@@ -126,11 +126,11 @@ Library: C:\Users\da5633\PCBInterpeter\Unity-PassthroughCameraApiSamples-main\Un
 --float-precision=Standard
 --target-framework=NetFramework
 --generate-link-xml=Temp\burst.link.xml
---temp-folder=C:\Users\da5633\PCBInterpeter\Unity-PassthroughCameraApiSamples-main\Unity-PassthroughCameraApiSamples-main\Temp\Burst
+--temp-folder=C:\UnityProjects\PCBInterpeter\Unity-PassthroughCameraApiSamples-main\Temp\Burst
 --debug=Full
 --key-folder=C:/Program Files/Unity/Hub/Editor/6000.3.10f1/Editor/Data/PlaybackEngines/AndroidPlayer
---decode-folder=C:\Users\da5633\PCBInterpeter\Unity-PassthroughCameraApiSamples-main\Unity-PassthroughCameraApiSamples-main\Library\Burst
---output=C:\Users\da5633\PCBInterpeter\Unity-PassthroughCameraApiSamples-main\Unity-PassthroughCameraApiSamples-main\Temp\BurstOutput\tempburstlibs\arm64-v8a\lib_burst_generated
+--decode-folder=C:\UnityProjects\PCBInterpeter\Unity-PassthroughCameraApiSamples-main\Library\Burst
+--output=C:\UnityProjects\PCBInterpeter\Unity-PassthroughCameraApiSamples-main\Temp\BurstOutput\tempburstlibs\arm64-v8a\lib_burst_generated
 --pdb-search-paths=Temp/ManagedSymbols/
 
 --method=Unity.InferenceEngine.CPUBackend+ConvJob, Unity.InferenceEngine, Version=2.5.5.0, Culture=neutral, PublicKeyToken=null::CanUseDepthwiseConvKernel(Unity.InferenceEngine.CPUBackend+ConvJob*, Unity.InferenceEngine, Version=2.5.5.0, Culture=neutral, PublicKeyToken=null)--499117ad07a5029f6555fc3c901489c2
@@ -145,11 +145,11 @@ Library: C:\Users\da5633\PCBInterpeter\Unity-PassthroughCameraApiSamples-main\Un
 --target-framework=NetFramework
 --float-mode=Fast
 --generate-link-xml=Temp\burst.link.xml
---temp-folder=C:\Users\da5633\PCBInterpeter\Unity-PassthroughCameraApiSamples-main\Unity-PassthroughCameraApiSamples-main\Temp\Burst
+--temp-folder=C:\UnityProjects\PCBInterpeter\Unity-PassthroughCameraApiSamples-main\Temp\Burst
 --debug=Full
 --key-folder=C:/Program Files/Unity/Hub/Editor/6000.3.10f1/Editor/Data/PlaybackEngines/AndroidPlayer
---decode-folder=C:\Users\da5633\PCBInterpeter\Unity-PassthroughCameraApiSamples-main\Unity-PassthroughCameraApiSamples-main\Library\Burst
---output=C:\Users\da5633\PCBInterpeter\Unity-PassthroughCameraApiSamples-main\Unity-PassthroughCameraApiSamples-main\Temp\BurstOutput\tempburstlibs\arm64-v8a\lib_burst_generated
+--decode-folder=C:\UnityProjects\PCBInterpeter\Unity-PassthroughCameraApiSamples-main\Library\Burst
+--output=C:\UnityProjects\PCBInterpeter\Unity-PassthroughCameraApiSamples-main\Temp\BurstOutput\tempburstlibs\arm64-v8a\lib_burst_generated
 --pdb-search-paths=Temp/ManagedSymbols/
 
 --method=Unity.Jobs.IJobParallelForExtensions+ParallelForJobStruct`1[[Unity.InferenceEngine.CPUBackend+GlobalAverageVariancePoolJob, Unity.InferenceEngine, Version=2.5.5.0, Culture=neutral, PublicKeyToken=null]], UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::Execute(Unity.InferenceEngine.CPUBackend+GlobalAverageVariancePoolJob&, Unity.InferenceEngine, Version=2.5.5.0, Culture=neutral, PublicKeyToken=null|System.IntPtr, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|System.IntPtr, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|Unity.Jobs.LowLevel.Unsafe.JobRanges&, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089)--7e188f97e7c8acfe68e9aa6fe0ca2545
@@ -164,11 +164,11 @@ Library: C:\Users\da5633\PCBInterpeter\Unity-PassthroughCameraApiSamples-main\Un
 --target-framework=NetFramework
 --float-mode=Fast
 --generate-link-xml=Temp\burst.link.xml
---temp-folder=C:\Users\da5633\PCBInterpeter\Unity-PassthroughCameraApiSamples-main\Unity-PassthroughCameraApiSamples-main\Temp\Burst
+--temp-folder=C:\UnityProjects\PCBInterpeter\Unity-PassthroughCameraApiSamples-main\Temp\Burst
 --debug=Full
 --key-folder=C:/Program Files/Unity/Hub/Editor/6000.3.10f1/Editor/Data/PlaybackEngines/AndroidPlayer
---decode-folder=C:\Users\da5633\PCBInterpeter\Unity-PassthroughCameraApiSamples-main\Unity-PassthroughCameraApiSamples-main\Library\Burst
---output=C:\Users\da5633\PCBInterpeter\Unity-PassthroughCameraApiSamples-main\Unity-PassthroughCameraApiSamples-main\Temp\BurstOutput\tempburstlibs\arm64-v8a\lib_burst_generated
+--decode-folder=C:\UnityProjects\PCBInterpeter\Unity-PassthroughCameraApiSamples-main\Library\Burst
+--output=C:\UnityProjects\PCBInterpeter\Unity-PassthroughCameraApiSamples-main\Temp\BurstOutput\tempburstlibs\arm64-v8a\lib_burst_generated
 --pdb-search-paths=Temp/ManagedSymbols/
 
 --method=Unity.InferenceEngine.IParallelForBatchExtensions+ParallelForBatchJobStruct`1[[Unity.InferenceEngine.CPUBackend+AveragePool3DJob, Unity.InferenceEngine, Version=2.5.5.0, Culture=neutral, PublicKeyToken=null]], Unity.InferenceEngine, Version=2.5.5.0, Culture=neutral, PublicKeyToken=null::Execute(Unity.InferenceEngine.CPUBackend+AveragePool3DJob&, Unity.InferenceEngine, Version=2.5.5.0, Culture=neutral, PublicKeyToken=null|System.IntPtr, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|System.IntPtr, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|Unity.Jobs.LowLevel.Unsafe.JobRanges&, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089)--192b89ea9a4779077826e35024eef1cf
@@ -239,11 +239,11 @@ Library: C:\Users\da5633\PCBInterpeter\Unity-PassthroughCameraApiSamples-main\Un
 --float-precision=Standard
 --target-framework=NetFramework
 --generate-link-xml=Temp\burst.link.xml
---temp-folder=C:\Users\da5633\PCBInterpeter\Unity-PassthroughCameraApiSamples-main\Unity-PassthroughCameraApiSamples-main\Temp\Burst
+--temp-folder=C:\UnityProjects\PCBInterpeter\Unity-PassthroughCameraApiSamples-main\Temp\Burst
 --debug=Full
 --key-folder=C:/Program Files/Unity/Hub/Editor/6000.3.10f1/Editor/Data/PlaybackEngines/AndroidPlayer
---decode-folder=C:\Users\da5633\PCBInterpeter\Unity-PassthroughCameraApiSamples-main\Unity-PassthroughCameraApiSamples-main\Library\Burst
---output=C:\Users\da5633\PCBInterpeter\Unity-PassthroughCameraApiSamples-main\Unity-PassthroughCameraApiSamples-main\Temp\BurstOutput\tempburstlibs\arm64-v8a\lib_burst_generated
+--decode-folder=C:\UnityProjects\PCBInterpeter\Unity-PassthroughCameraApiSamples-main\Library\Burst
+--output=C:\UnityProjects\PCBInterpeter\Unity-PassthroughCameraApiSamples-main\Temp\BurstOutput\tempburstlibs\arm64-v8a\lib_burst_generated
 --pdb-search-paths=Temp/ManagedSymbols/
 
 --method=Unity.InferenceEngine.IParallelForBatchExtensions+ParallelForBatchJobStruct`1[[Unity.InferenceEngine.CPUBackend+WindowedDFTMatrixOutRealImaJob, Unity.InferenceEngine, Version=2.5.5.0, Culture=neutral, PublicKeyToken=null]], Unity.InferenceEngine, Version=2.5.5.0, Culture=neutral, PublicKeyToken=null::Execute(Unity.InferenceEngine.CPUBackend+WindowedDFTMatrixOutRealImaJob&, Unity.InferenceEngine, Version=2.5.5.0, Culture=neutral, PublicKeyToken=null|System.IntPtr, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|System.IntPtr, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|Unity.Jobs.LowLevel.Unsafe.JobRanges&, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089)--a5323892324b0104ccb156875c95d0c5
