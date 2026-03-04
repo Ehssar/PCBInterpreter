@@ -4,6 +4,8 @@ using System.Collections.Generic;
 [Serializable]
 public class AnalyzeResponse
 {
+    public string request_id;
+    public int image_bytes;
     public List<ComponentResult> components;
 }
 
