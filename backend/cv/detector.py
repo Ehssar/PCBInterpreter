@@ -1,81 +1,105 @@
-from pathlib import Path
-from typing import Any
+from __future__ import annotations
+
+import os
 import uuid
+from typing import Any
 
+import cv2
 import numpy as np
-from ultralytics import YOLO
+import requests
 
-MODEL_PATH = Path(__file__).resolve().parent / "models" / "pcb_components_best.pt"
+ROBOFLOW_API_KEY = os.getenv("ROBOFLOW_API_KEY", "")
+ROBOFLOW_MODEL_ID = os.getenv("ROBOFLOW_MODEL_ID", "printed-circuit-board/3")
+ROBOFLOW_BASE_URL = os.getenv("ROBOFLOW_BASE_URL", "https://serverless.roboflow.com")
+ROBOFLOW_TIMEOUT_SECONDS = float(os.getenv("ROBOFLOW_TIMEOUT_SECONDS", "20"))
+MIN_CONFIDENCE = float(os.getenv("MIN_CONFIDENCE", "0.25"))
 
 LABEL_MAP = {
     "resistor": "resistor",
     "capacitor": "capacitor",
+    "electrolytic capacitor": "capacitor",
     "ic": "ic",
+    "iC": "ic",
     "connector": "connector",
     "diode": "diode",
     "transistor": "transistor",
     "inductor": "inductor",
+    "led": "led",
+    "button": "unknown",
+    "switch": "unknown",
+    "clock": "unknown",
+    "ferrite bead": "unknown",
+    "fuse": "unknown",
+    "heatsink": "unknown",
+    "jumper": "unknown",
 }
 
-_model: YOLO | None = None
+
+def _bgr_to_jpeg_bytes(image_bgr: np.ndarray) -> bytes:
+    ok, encoded = cv2.imencode(".jpg", image_bgr)
+    if not ok:
+        raise ValueError("Failed to JPEG-encode image for Roboflow request")
+    return encoded.tobytes()
 
 
-def load_model() -> YOLO:
-    global _model
-
-    if _model is None:
-        if not MODEL_PATH.exists():
-            raise FileNotFoundError(f"Model weights not found at {MODEL_PATH}")
-
-        # Long-term solution: use Ultralytics directly instead of torch.hub + local yolov5 repo
-        _model = YOLO(str(MODEL_PATH))
-
-    return _model
+def _xy_center_to_xywh(x: float, y: float, w: float, h: float) -> list[int]:
+    left = int(round(x - w / 2))
+    top = int(round(y - h / 2))
+    width = int(round(w))
+    height = int(round(h))
+    return [left, top, width, height]
 
 
-def _xyxy_to_xywh(x1: float, y1: float, x2: float, y2: float) -> list[int]:
-    x = int(round(x1))
-    y = int(round(y1))
-    w = int(round(x2 - x1))
-    h = int(round(y2 - y1))
-    return [x, y, w, h]
+def _normalize_prediction(pred: dict[str, Any]) -> dict[str, Any] | None:
+    raw_label = str(pred.get("class", "unknown")).strip()
+    conf = float(pred.get("confidence", 0.0))
+
+    if conf < MIN_CONFIDENCE:
+        return None
+
+    component_type = LABEL_MAP.get(raw_label.lower(), "unknown")
+
+    bbox = _xy_center_to_xywh(
+        float(pred["x"]),
+        float(pred["y"]),
+        float(pred["width"]),
+        float(pred["height"]),
+    )
+
+    return {
+        "component_id": str(uuid.uuid4())[:8],
+        "type": component_type,
+        "confidence": conf,
+        "bbox": bbox,
+        "candidates": [],
+        "source_label": raw_label,
+    }
 
 
 def detect_components_bgr(image_bgr: np.ndarray) -> dict[str, Any]:
-    model = load_model()
+    if not ROBOFLOW_API_KEY:
+        raise RuntimeError("ROBOFLOW_API_KEY is not set")
 
-    # Ultralytics accepts numpy images directly for prediction
-    results = model.predict(
-        source=image_bgr,
-        conf=0.25,
-        verbose=False
+    image_bytes = _bgr_to_jpeg_bytes(image_bgr)
+
+    url = f"{ROBOFLOW_BASE_URL}/{ROBOFLOW_MODEL_ID}"
+
+    response = requests.post(
+        url,
+        params={"api_key": ROBOFLOW_API_KEY},
+        files={"file": ("frame.jpg", image_bytes, "image/jpeg")},
+        timeout=ROBOFLOW_TIMEOUT_SECONDS,
     )
+    response.raise_for_status()
 
-    result = results[0]
-    components = []
+    payload = response.json()
+    predictions = payload.get("predictions", [])
 
-    if result.boxes is None or len(result.boxes) == 0:
-        return {"components": components}
+    components: list[dict[str, Any]] = []
 
-    boxes_xyxy = result.boxes.xyxy.cpu().numpy()
-    boxes_cls = result.boxes.cls.cpu().numpy()
-    boxes_conf = result.boxes.conf.cpu().numpy()
-    names = result.names
-
-    for xyxy, cls_id, conf in zip(boxes_xyxy, boxes_cls, boxes_conf):
-        x1, y1, x2, y2 = xyxy.tolist()
-
-        raw_name = str(names[int(cls_id)]).lower().strip()
-        component_type = LABEL_MAP.get(raw_name, raw_name)
-
-        bbox = _xyxy_to_xywh(x1, y1, x2, y2)
-
-        components.append({
-            "component_id": str(uuid.uuid4())[:8],
-            "type": component_type,
-            "confidence": float(conf),
-            "bbox": bbox,
-            "candidates": []
-        })
+    for pred in predictions:
+        normalized = _normalize_prediction(pred)
+        if normalized is not None:
+            components.append(normalized)
 
     return {"components": components}
