@@ -1,10 +1,11 @@
 from pathlib import Path
 from typing import Any
 import uuid
-import torch
+
+import numpy as np
+from ultralytics import YOLO
 
 MODEL_PATH = Path(__file__).resolve().parent / "models" / "pcb_components_best.pt"
-YOLOV5_PATH = Path(__file__).resolve().parents[1] / "yolov5"
 
 LABEL_MAP = {
     "resistor": "resistor",
@@ -16,28 +17,21 @@ LABEL_MAP = {
     "inductor": "inductor",
 }
 
-_model = None
+_model: YOLO | None = None
 
 
-def load_model():
+def load_model() -> YOLO:
     global _model
 
     if _model is None:
         if not MODEL_PATH.exists():
             raise FileNotFoundError(f"Model weights not found at {MODEL_PATH}")
 
-        if not YOLOV5_PATH.exists():
-            raise FileNotFoundError(f"YOLOv5 repo not found at {YOLOV5_PATH}")
-
-        _model = torch.hub.load(
-            str(YOLOV5_PATH),
-            "custom",
-            path=str(MODEL_PATH),
-            source="local"
-        )
-        _model.conf = 0.25
+        # Long-term solution: use Ultralytics directly instead of torch.hub + local yolov5 repo
+        _model = YOLO(str(MODEL_PATH))
 
     return _model
+
 
 def _xyxy_to_xywh(x1: float, y1: float, x2: float, y2: float) -> list[int]:
     x = int(round(x1))
@@ -47,28 +41,39 @@ def _xyxy_to_xywh(x1: float, y1: float, x2: float, y2: float) -> list[int]:
     return [x, y, w, h]
 
 
-def detect_components_bgr(image_bgr) -> dict[str, Any]:
+def detect_components_bgr(image_bgr: np.ndarray) -> dict[str, Any]:
     model = load_model()
-    results = model(image_bgr)
-    preds = results.pandas().xyxy[0]
 
+    # Ultralytics accepts numpy images directly for prediction
+    results = model.predict(
+        source=image_bgr,
+        conf=0.25,
+        verbose=False
+    )
+
+    result = results[0]
     components = []
 
-    for _, row in preds.iterrows():
-        raw_name = str(row["name"]).lower().strip()
+    if result.boxes is None or len(result.boxes) == 0:
+        return {"components": components}
+
+    boxes_xyxy = result.boxes.xyxy.cpu().numpy()
+    boxes_cls = result.boxes.cls.cpu().numpy()
+    boxes_conf = result.boxes.conf.cpu().numpy()
+    names = result.names
+
+    for xyxy, cls_id, conf in zip(boxes_xyxy, boxes_cls, boxes_conf):
+        x1, y1, x2, y2 = xyxy.tolist()
+
+        raw_name = str(names[int(cls_id)]).lower().strip()
         component_type = LABEL_MAP.get(raw_name, raw_name)
 
-        bbox = _xyxy_to_xywh(
-            row["xmin"],
-            row["ymin"],
-            row["xmax"],
-            row["ymax"]
-        )
+        bbox = _xyxy_to_xywh(x1, y1, x2, y2)
 
         components.append({
             "component_id": str(uuid.uuid4())[:8],
             "type": component_type,
-            "confidence": float(row["confidence"]),
+            "confidence": float(conf),
             "bbox": bbox,
             "candidates": []
         })
