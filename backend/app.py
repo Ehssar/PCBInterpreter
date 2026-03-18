@@ -1,5 +1,5 @@
 from fastapi import FastAPI, File, UploadFile
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 import os
 import time
 import hashlib
@@ -162,6 +162,83 @@ async def analyze_image(file: UploadFile = File(...)):
             )
         )
 
+@app.post("/analyze_debug")
+async def analyze_debug(file: UploadFile = File(...)):
+    contents = await file.read()
+
+    if not contents:
+        return JSONResponse(status_code=400, content={"error": "Empty upload"})
+
+    arr = np.frombuffer(contents, np.uint8)
+    image_bgr = cv2.imdecode(arr, cv2.IMREAD_COLOR)
+
+    if image_bgr is None:
+        return JSONResponse(status_code=400, content={"error": "Invalid image decode"})
+
+    detector_mode = get_detector_mode()
+    h = hashlib.sha256(contents).hexdigest()[:12]
+
+    try:
+        if detector_mode == "mock":
+            raise RuntimeError("DETECTOR_MODE=mock")
+
+        result = detect_with_model(image_bgr)
+        components = result.get("components", [])
+        mode = "model"
+
+    except Exception as e:
+        components = [make_mock_component(h)]
+        mode = "mock"
+
+    # ---- DRAW BOXES ----
+    annotated = image_bgr.copy()
+
+    for comp in components:
+        bbox = comp.get("bbox", [])
+        if len(bbox) != 4:
+            continue
+
+        x, y, w, h_box = bbox
+        label = comp.get("type", "unknown")
+        conf = comp.get("confidence", 0.0)
+
+        # Color: red = model, orange = mock
+        color = (255, 0, 0) if mode == "model" else (0, 165, 255)
+
+        # Draw rectangle
+        cv2.rectangle(
+            annotated,
+            (x, y),
+            (x + w, y + h_box),
+            color,
+            2
+        )
+
+        # Draw label
+        text = f"{label} {conf:.2f}"
+        text_y = max(20, y - 8)
+
+        cv2.putText(
+            annotated,
+            text,
+            (x, text_y),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.6,
+            color,
+            2,
+            cv2.LINE_AA
+        )
+
+    # Encode back to JPEG
+    ok, encoded = cv2.imencode(".jpg", annotated)
+    if not ok:
+        return JSONResponse(status_code=500, content={"error": "Failed to encode image"})
+
+    return Response(
+        content=encoded.tobytes(),
+        media_type="image/jpeg",
+        headers={"X-Detection-Mode": mode}
+    )
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
