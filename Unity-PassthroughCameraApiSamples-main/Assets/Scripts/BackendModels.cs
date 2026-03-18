@@ -17,6 +17,10 @@ public class ComponentResult
     public float confidence;
     public int[] bbox; // [x, y, w, h]
     public List<CandidatePart> candidates;
+
+    // frontend-only runtime state
+    public bool isVisible;
+    public bool isPinned;
 }
 
 [Serializable]

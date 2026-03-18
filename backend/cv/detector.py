@@ -50,6 +50,66 @@ def _xy_center_to_xywh(x: float, y: float, w: float, h: float) -> list[int]:
     return [left, top, width, height]
 
 
+def _make_component_label(component_type: str) -> dict[str, Any]:
+    pretty_title = component_type.replace("_", " ").title()
+
+    return {
+        "title": pretty_title,
+        "subtitle": "Tap or ask for details",
+        "visible": False,
+        "pinned": False,
+    }
+
+
+def _make_component_details(component_type: str, raw_label: str) -> dict[str, Any]:
+    return {
+        "summary": f"Detected {component_type}",
+        "ocr_text": None,
+        "datasheet_url": None,
+        "raw_model_label": raw_label,
+    }
+
+def _mock_candidates_for_type(component_type: str) -> list[dict[str, Any]]:
+    mock_map = {
+        "resistor": [
+            {
+                "part_number": "RC0603FR-0710KL",
+                "confidence": 0.42,
+                "datasheet_url": "https://example.com/resistor-datasheet"
+            }
+        ],
+        "capacitor": [
+            {
+                "part_number": "CL10A106KP8NNNC",
+                "confidence": 0.40,
+                "datasheet_url": "https://example.com/capacitor-datasheet"
+            }
+        ],
+        "ic": [
+            {
+                "part_number": "LM358",
+                "confidence": 0.35,
+                "datasheet_url": "https://example.com/ic-datasheet"
+            }
+        ],
+        "diode": [
+            {
+                "part_number": "1N4148",
+                "confidence": 0.38,
+                "datasheet_url": "https://example.com/diode-datasheet"
+            }
+        ],
+        "connector": [
+            {
+                "part_number": "HDR-2.54-8P",
+                "confidence": 0.30,
+                "datasheet_url": "https://example.com/connector-datasheet"
+            }
+        ],
+    }
+
+    return mock_map.get(component_type, [])
+
 def _normalize_prediction(pred: dict[str, Any]) -> dict[str, Any] | None:
     raw_label = str(pred.get("class", "unknown")).strip()
     conf = float(pred.get("confidence", 0.0))
@@ -71,10 +131,11 @@ def _normalize_prediction(pred: dict[str, Any]) -> dict[str, Any] | None:
         "type": component_type,
         "confidence": conf,
         "bbox": bbox,
-        "candidates": [],
         "source_label": raw_label,
+        "label": _make_component_label(component_type),
+        "details": _make_component_details(component_type, raw_label),
+        "candidates":  _mock_candidates_for_type(component_type),
     }
-
 
 def detect_components_bgr(image_bgr: np.ndarray) -> dict[str, Any]:
     if not ROBOFLOW_API_KEY:

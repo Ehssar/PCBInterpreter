@@ -23,11 +23,26 @@ def make_mock_component(h: str):
     w = 60 + ((seed // 7) % 80)
     hh = 20 + ((seed // 11) % 40)
 
+    component_type = "unknown"
+
     return {
         "component_id": f"comp_{h}",
-        "type": "unknown",
+        "type": component_type,
         "confidence": 0.50,
         "bbox": [x, y, w, hh],
+        "source_label": "mock",
+        "label": {
+            "title": "Unknown",
+            "subtitle": "Mock detection",
+            "visible": False,
+            "pinned": False,
+        },
+        "details": {
+            "summary": "Mock component used as fallback",
+            "ocr_text": None,
+            "datasheet_url": "https://example.com/datasheet",
+            "raw_model_label": "mock",
+        },
         "candidates": [
             {
                 "part_number": f"MOCK-{h}",
@@ -65,9 +80,12 @@ def build_analyze_response(
 ):
     payload = {
         "request_id": request_id,
+        "board_id": f"board_{request_id}",
         "timing_ms": timing_ms,
         "image_bytes": image_bytes,
         "mode": mode,
+        "label_visibility_default": "hidden",
+        "component_count": len(components),
         "components": components,
     }
 
