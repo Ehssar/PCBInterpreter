@@ -12,6 +12,7 @@ public class FrameCaptureAndSend : MonoBehaviour
 
     [Header("UI")]
     [SerializeField] private JsonOverlayUI overlay;
+    [SerializeField] private BoardSessionManager boardSessionManager;
 
     [Header("Capture")]
     [SerializeField] private int jpegQuality = 75;
@@ -113,7 +114,21 @@ public class FrameCaptureAndSend : MonoBehaviour
             }
             else
             {
-                overlay?.SetResponse(resp);
+                if (boardSessionManager != null)
+                {
+                    boardSessionManager.CreateSession(resp);
+                }
+                else
+                {
+                    Debug.LogWarning("BoardSessionManager reference is missing.");
+                }
+
+                // Safely Keep overlay as debug/status UI, not the source of truth.
+                int count = resp.components != null ? resp.components.Count : 0;
+                overlay?.SetStatus($"Analysis complete: mode={resp.mode}, components={count}");
+
+                // Optional debug view:
+                // overlay?.SetResponse(resp);
             }
         }
         finally
