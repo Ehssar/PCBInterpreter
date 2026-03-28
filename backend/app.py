@@ -102,11 +102,18 @@ def health():
         "detector_mode": get_detector_mode()
     }
 
+@app.get("/ping")
+def ping():
+    return {"ok": True}
+
 
 @app.post("/analyze")
 async def analyze_image(file: UploadFile = File(...)):
     t0 = time.time()
     contents = await file.read()
+
+    with open("debug_last_upload.jpg", "wb") as f:
+        f.write(contents)
 
     h = hashlib.sha256(contents).hexdigest()[:12] if contents else "emptyupload"
     n = len(contents)

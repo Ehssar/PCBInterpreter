@@ -6,7 +6,7 @@ public class FrameCaptureAndSend : MonoBehaviour
 {
     [Header("Backend")]
     [SerializeField] private string editorHost = "127.0.0.1";
-    [SerializeField] private string androidHost = "https://kip-unerasing-twitchily.ngrok-free.dev";
+    [SerializeField] private string androidHost = "http://10.9.43.54:8000"; // Swap for ngrok tunnel
     [SerializeField] private int port = 8000;
     // [SerializeField] private string analyzePath = "/analyze";
 
@@ -15,6 +15,7 @@ public class FrameCaptureAndSend : MonoBehaviour
     [SerializeField] private BoardSessionManager boardSessionManager;
 
     [Header("Capture")]
+    [SerializeField] private PcaDirectCapture pcaDirectCapture;
     [SerializeField] private int jpegQuality = 75;
     [SerializeField] private float minSecondsBetweenSends = 1.0f;
     private bool inFlight = false;
@@ -44,6 +45,8 @@ public class FrameCaptureAndSend : MonoBehaviour
         // Use a button you like; this is common on Quest controllers
         if (OVRInput.GetDown(OVRInput.Button.SecondaryHandTrigger))
         {
+            Debug.Log("Right trigger detected in FrameCaptureAndSend.");
+
             if (inFlight) return; // avoid pilin up requests
             if (Time.time - lastSendTime >= minSecondsBetweenSends)
             {
@@ -61,16 +64,56 @@ public class FrameCaptureAndSend : MonoBehaviour
 
         yield return new WaitForEndOfFrame();
 
+        // using var request = UnityWebRequest.Get($"{BaseUrl}/ping");
+        // request.timeout = 20;
+        // yield return request.SendWebRequest();
+        // Debug.Log($"Ping result: {request.result}, code={request.responseCode}, text={request.downloadHandler.text}");
+
         Texture2D tex = null;
+        bool captureDone = false;
+        string captureError = null;
         try
         {
-            tex = ScreenCapture.CaptureScreenshotAsTexture();
-            if (tex == null)
+            if (pcaDirectCapture == null)
             {
-                overlay?.SetStatus("Capture failed: null texture");
-                Debug.LogError("CaptureScreenshotAsTexture returned null.");
+                overlay?.SetStatus("Capture failed: PcaDirectCapture missing");
+                Debug.LogError("PcaDirectCapture reference is missing.");
                 yield break;
             }
+
+            Debug.Log(pcaDirectCapture != null
+            ? $"Using PcaDirectCapture from GameObject: {pcaDirectCapture.gameObject.name}"
+            : "pcaDirectCapture reference is null");
+
+            pcaDirectCapture.TryCaptureLatestFrame(
+                onSuccess: capturedTex =>
+                {
+                    tex = capturedTex;
+                    captureDone = true;
+                },
+                onError: err =>
+                {
+                    captureError = err;
+                    captureDone = true;
+                });
+
+            yield return new WaitUntil(() => captureDone);
+
+            if (!string.IsNullOrEmpty(captureError))
+            {
+                overlay?.SetStatus($"Capture failed: {captureError}");
+                Debug.LogError(captureError);
+                yield break;
+            }
+
+            if (tex == null)
+            {
+                overlay?.SetStatus("Capture failed: null passthrough frame");
+                Debug.LogError("TryCaptureLatestFrame returned null texture.");
+                yield break;
+            }
+
+            Debug.Log($"Using passthrough frame: {tex.width}x{tex.height}");
 
             byte[] jpg = tex.EncodeToJPG(jpegQuality);
             overlay?.SetStatus($"Sending {jpg.Length} bytes...");
@@ -82,6 +125,7 @@ public class FrameCaptureAndSend : MonoBehaviour
             using var req = UnityWebRequest.Post($"{BaseUrl}/analyze", form);
             req.timeout = 20;
 
+            Debug.Log("POST URL = " + $"{BaseUrl}/analyze");
             yield return req.SendWebRequest();
 
             if (req.result != UnityWebRequest.Result.Success)
@@ -117,6 +161,8 @@ public class FrameCaptureAndSend : MonoBehaviour
                 if (boardSessionManager != null)
                 {
                     boardSessionManager.CreateSession(resp);
+                    // temporary visual test
+                    boardSessionManager.ShowAllLabels();
                 }
                 else
                 {

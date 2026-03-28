@@ -189,6 +189,52 @@ Transform:
   - {fileID: 1450004262}
   m_Father: {fileID: 1441500616}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &176878493
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 176878495}
+  - component: {fileID: 176878494}
+  m_Layer: 0
+  m_Name: LabelToggleInput
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &176878494
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 176878493}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 470d5a85e6cf7e74daa6668fedb36235, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LabelToggleInput
+  boardSessionManager: {fileID: 916929961}
+  overlay: {fileID: 446239324}
+--- !u!4 &176878495
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 176878493}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0.74}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &308588196
 GameObject:
   m_ObjectHideFlags: 0
@@ -624,7 +670,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 446239319}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ee10491ef6d5d1d49a270cf6b09bdc19, type: 3}
   m_Name: 
@@ -708,6 +754,8 @@ MonoBehaviour:
   androidHost: https://kip-unerasing-twitchily.ngrok-free.dev
   port: 8000
   overlay: {fileID: 0}
+  boardSessionManager: {fileID: 916929961}
+  pcaDirectCapture: {fileID: 1608124434}
   jpegQuality: 75
   minSecondsBetweenSends: 1
 --- !u!1 &478312660
@@ -1161,6 +1209,50 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1002987069}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &916929960
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 916929962}
+  - component: {fileID: 916929961}
+  m_Layer: 0
+  m_Name: BoardSessionManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &916929961
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 916929960}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 44cff96d16f099540b128586595b50ee, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BoardSessionManager
+--- !u!4 &916929962
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 916929960}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0.74}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1002987068
 GameObject:
@@ -1899,8 +1991,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2b0a1c062d27bd74e9d679787079e470, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PcaDirectCapture
-  captureKey: 32
-  jpgQuality: 90
+  pca: {fileID: 1608124433}
 --- !u!1 &1721784376
 GameObject:
   m_ObjectHideFlags: 0
@@ -2038,6 +2129,57 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1721784376}
   m_CullTransparentMesh: 0
+--- !u!1 &1747044974
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1747044976}
+  - component: {fileID: 1747044975}
+  m_Layer: 0
+  m_Name: LabelSpawner
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1747044975
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1747044974}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8fbfc86abaa6e8541a400d72cd3bc8aa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LabelSpawner
+  boardSessionManager: {fileID: 916929961}
+  labelParent: {fileID: 1747044976}
+  targetCamera: {fileID: 1848740389}
+  labelScale: {x: 0.0025, y: 0.0025, z: 0.0025}
+  zOffset: 2
+  yOffset: 0.05
+  fontSize: 4
+--- !u!4 &1747044976
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1747044974}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0.74}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1798160513
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2291,3 +2433,6 @@ SceneRoots:
   - {fileID: 717028859}
   - {fileID: 462102557}
   - {fileID: 1905038263}
+  - {fileID: 916929962}
+  - {fileID: 1747044976}
+  - {fileID: 176878495}

@@ -1,148 +1,120 @@
 using System;
-using System.IO;
 using Meta.XR;
+using Unity.Collections;
 using UnityEngine;
 using UnityEngine.Rendering;
 
 public class PcaDirectCapture : MonoBehaviour
 {
-    [Header("Press Space in Editor. On-device we’ll later swap to controller input.")]
-    public KeyCode captureKey = KeyCode.Space;
-
-    [Header("JPG Quality 1-100")]
-    [Range(1, 100)]
-    public int jpgQuality = 90;
-
-    private PassthroughCameraAccess pca;
+    [SerializeField] private PassthroughCameraAccess pca;
     private bool busy;
 
     void Awake()
     {
-        pca = GetComponent<PassthroughCameraAccess>();
         if (pca == null)
         {
-            Debug.LogError("PcaDirectCapture must be attached to the same GameObject as PassthroughCameraAccess.");
+            pca = GetComponent<PassthroughCameraAccess>();
         }
-    }
 
-    void Update()
-    {
-        if (pca == null) return;
-
-        if (Input.GetKeyDown(captureKey))
+        if (pca == null)
         {
-            TryCaptureFromPcaMaterial();
+            Debug.LogError("PassthroughCameraAccess missing.");
         }
     }
 
-    void TryCaptureFromPcaMaterial()
+    public bool IsBusy => busy;
+
+    public void TryCaptureLatestFrame(Action<Texture2D> onSuccess, Action<string> onError)
     {
-        if (busy) return;
+        if (pca == null)
+        {
+            onError?.Invoke("PassthroughCameraAccess missing.");
+            return;
+        }
+
+        if (busy)
+        {
+            onError?.Invoke("Passthrough capture already in progress.");
+            return;
+        }
 
         if (pca.TargetMaterial == null)
         {
-            Debug.LogError(
+            onError?.Invoke(
                 "PassthroughCameraAccess.TargetMaterial is not set. " +
-                "Assign a material to TargetMaterial so we can read the live camera texture from it."
+                "Assign a material so the live camera texture can be read."
             );
             return;
         }
 
-        // PassthroughCameraAccess uses _MainTex by default if TexturePropertyName is blank
         string prop = string.IsNullOrEmpty(pca.TexturePropertyName) ? "_MainTex" : pca.TexturePropertyName;
-
         Texture tex = pca.TargetMaterial.GetTexture(prop);
+
         if (tex == null)
         {
-            Debug.LogError($"No texture found on TargetMaterial property '{prop}'.");
+            onError?.Invoke($"No texture found on TargetMaterial property '{prop}'.");
             return;
         }
 
         busy = true;
 
-        // Handle both RenderTexture and Texture2D
-        if (tex is RenderTexture rt)
-        {
-            CaptureRenderTexture(rt);
-        }
-        else if (tex is Texture2D t2d)
-        {
-            CaptureTexture2D(t2d);
-        }
-        else
-        {
-            Debug.LogError($"Unsupported texture type: {tex.GetType().Name}. Expected RenderTexture or Texture2D.");
-            busy = false;
-        }
+        // Always normalize through an uncompressed RenderTexture first.
+        CaptureViaBlit(tex, onSuccess, onError);
     }
 
-    void CaptureRenderTexture(RenderTexture rt)
+    private void CaptureViaBlit(Texture source, Action<Texture2D> onSuccess, Action<string> onError)
     {
-        AsyncGPUReadback.Request(rt, 0, request =>
-        {
-            if (request.hasError)
-            {
-                Debug.LogError("AsyncGPUReadback failed for RenderTexture.");
-                busy = false;
-                return;
-            }
+        int width = source.width;
+        int height = source.height;
 
-            var data = request.GetData<byte>();
-            var cpuTex = new Texture2D(rt.width, rt.height, TextureFormat.RGBA32, false);
-            cpuTex.LoadRawTextureData(data);
-            cpuTex.Apply();
+        RenderTexture rt = RenderTexture.GetTemporary(
+            width,
+            height,
+            0,
+            RenderTextureFormat.ARGB32,
+            RenderTextureReadWrite.sRGB
+        );
 
-            SaveJpg(cpuTex);
-            Destroy(cpuTex);
-            busy = false;
-        });
-    }
-
-    void CaptureTexture2D(Texture2D t2d)
-    {
-        // If it’s readable on CPU, easiest path:
         try
         {
-            // Some GPU-backed Texture2D are not readable; EncodeToJPG will throw.
-            byte[] jpg = t2d.EncodeToJPG(jpgQuality);
-            WriteBytes(jpg, t2d.width, t2d.height);
-            busy = false;
+            Graphics.Blit(source, rt);
         }
-        catch (Exception)
+        catch (Exception e)
         {
-            // Fallback: GPU readback from Texture2D
-            AsyncGPUReadback.Request(t2d, 0, request =>
+            RenderTexture.ReleaseTemporary(rt);
+            busy = false;
+            onError?.Invoke($"Graphics.Blit failed: {e.Message}");
+            return;
+        }
+
+        AsyncGPUReadback.Request(rt, 0, TextureFormat.RGBA32, request =>
+        {
+            try
             {
                 if (request.hasError)
                 {
-                    Debug.LogError("AsyncGPUReadback failed for Texture2D.");
                     busy = false;
+                    onError?.Invoke("AsyncGPUReadback failed after blit.");
                     return;
                 }
 
                 var data = request.GetData<byte>();
-                var cpuTex = new Texture2D(t2d.width, t2d.height, TextureFormat.RGBA32, false);
+                Texture2D cpuTex = new Texture2D(width, height, TextureFormat.RGBA32, false);
                 cpuTex.LoadRawTextureData(data);
                 cpuTex.Apply();
 
-                SaveJpg(cpuTex);
-                Destroy(cpuTex);
                 busy = false;
-            });
-        }
-    }
-
-    void SaveJpg(Texture2D cpuTex)
-    {
-        byte[] jpg = cpuTex.EncodeToJPG(jpgQuality);
-        WriteBytes(jpg, cpuTex.width, cpuTex.height);
-    }
-
-    void WriteBytes(byte[] jpg, int w, int h)
-    {
-        string name = $"pca_{DateTime.Now:yyyyMMdd_HHmmss_fff}_{w}x{h}.jpg";
-        string path = Path.Combine(Application.persistentDataPath, name);
-        File.WriteAllBytes(path, jpg);
-        Debug.Log($"Saved PCA frame: {path}");
+                onSuccess?.Invoke(cpuTex);
+            }
+            catch (Exception e)
+            {
+                busy = false;
+                onError?.Invoke($"Failed to build CPU texture after blit: {e.Message}");
+            }
+            finally
+            {
+                RenderTexture.ReleaseTemporary(rt);
+            }
+        });
     }
 }

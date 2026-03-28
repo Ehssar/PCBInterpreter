@@ -10,6 +10,7 @@ public class LabelToggleInput : MonoBehaviour
         // Left secondary hand trigger toggle
         if (OVRInput.GetDown(OVRInput.Button.PrimaryHandTrigger))
         {
+            Debug.Log("LEFT trigger pressed");
             ToggleLabels();
         }
     }
