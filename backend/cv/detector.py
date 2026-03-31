@@ -1,4 +1,5 @@
 from __future__ import annotations
+from enrichment.llm_enrichment import enrich_component
 
 import os
 import uuid
@@ -13,6 +14,16 @@ ROBOFLOW_MODEL_ID = os.getenv("ROBOFLOW_MODEL_ID", "printed-circuit-board/3")
 ROBOFLOW_BASE_URL = os.getenv("ROBOFLOW_BASE_URL", "https://serverless.roboflow.com")
 ROBOFLOW_TIMEOUT_SECONDS = float(os.getenv("ROBOFLOW_TIMEOUT_SECONDS", "20"))
 MIN_CONFIDENCE = float(os.getenv("MIN_CONFIDENCE", "0.25"))
+
+ENABLE_LLM_ENRICHMENT = os.getenv("ENABLE_LLM_ENRICHMENT", "false").lower() == "true"
+LLM_ENRICH_MAX_COMPONENTS = int(os.getenv("LLM_ENRICH_MAX_COMPONENTS", "1"))
+LLM_ENRICH_MIN_CONFIDENCE = float(os.getenv("LLM_ENRICH_MIN_CONFIDENCE", "0.70"))
+LLM_ENRICH_TYPES = {
+    t.strip().lower()
+    for t in os.getenv("LLM_ENRICH_TYPES", "ic,connector").split(",")
+    if t.strip()
+}
+LLM_USE_NEIGHBORHOOD_CROP = os.getenv("LLM_USE_NEIGHBORHOOD_CROP", "false").lower() == "true"
 
 LABEL_MAP = {
     "resistor": "resistor",
@@ -50,24 +61,106 @@ def _xy_center_to_xywh(x: float, y: float, w: float, h: float) -> list[int]:
     return [left, top, width, height]
 
 
-def _make_component_label(component_type: str) -> dict[str, Any]:
-    pretty_title = component_type.replace("_", " ").title()
+def _pretty_name(component_type: str, raw_label: str) -> str:
+    if raw_label and raw_label.lower() != component_type.lower():
+        return raw_label.title()
+    return component_type.replace("_", " ").title()
+
+
+def _make_component_label(component_type: str, raw_label: str) -> dict[str, Any]:
+    title = _pretty_name(component_type, raw_label)
 
     return {
-        "title": pretty_title,
+        "title": title,
         "subtitle": "Tap or ask for details",
         "visible": False,
         "pinned": False,
     }
 
 
-def _make_component_details(component_type: str, raw_label: str) -> dict[str, Any]:
+def _make_attributes(component_type: str, raw_label: str) -> dict[str, Any]:
+    raw_lower = raw_label.lower().strip()
+
+    package = None
+    package_confidence = None
+    part_family = None
+    part_family_confidence = None
+    electrical_value = None
+    electrical_value_confidence = None
+    likely_role = None
+    likely_role_confidence = None
+    mount_type = None
+    pin_count = None
+    polarized = None
+    marking_text = None
+
+    # Conservative CV-only heuristics for now.
+    # These are placeholders so the schema is ready for OCR/LLM enrichment later.
+    if component_type in {"resistor", "capacitor", "ic", "diode", "transistor", "inductor", "led"}:
+        mount_type = "SMD"
+
+    if component_type == "capacitor":
+        if "electrolytic" in raw_lower:
+            polarized = True
+            likely_role = "bulk capacitor"
+            likely_role_confidence = 0.45
+        else:
+            polarized = False
+
+    if component_type == "ic":
+        part_family = "integrated circuit"
+        part_family_confidence = 0.35
+
     return {
-        "summary": f"Detected {component_type}",
+        "package": package,
+        "package_confidence": package_confidence,
+        "marking_text": marking_text,
+        "part_family": part_family,
+        "part_family_confidence": part_family_confidence,
+        "electrical_value": electrical_value,
+        "electrical_value_confidence": electrical_value_confidence,
+        "likely_role": likely_role,
+        "likely_role_confidence": likely_role_confidence,
+        "mount_type": mount_type,
+        "pin_count": pin_count,
+        "polarized": polarized,
+    }
+
+def _should_enrich_component(component: dict[str, Any]) -> bool:
+    component_type = str(component.get("type", "")).lower()
+    confidence = float(component.get("confidence", 0.0))
+
+    return (
+        ENABLE_LLM_ENRICHMENT
+        and component_type in LLM_ENRICH_TYPES
+        and confidence >= LLM_ENRICH_MIN_CONFIDENCE
+    )
+
+def _make_enrichment(component_type: str, raw_label: str) -> dict[str, Any]:
+    display_name = _pretty_name(component_type, raw_label)
+
+    return {
+        "display_name": display_name,
+        "one_line_label": f"Likely {component_type}",
+        "function_summary": f"Detected {component_type}. Detailed function inference not yet available.",
+        "confidence_note": "Preliminary CV-only result.",
         "ocr_text": None,
         "datasheet_url": None,
-        "raw_model_label": raw_label,
+        "needs_human_verification": True,
+        "datasheet_search_terms": [component_type],
+        "attributes": _make_attributes(component_type, raw_label),
     }
+
+
+def _make_detection(component_type: str, raw_label: str, conf: float) -> dict[str, Any]:
+    return {
+        "source": "roboflow",
+        "model_id": ROBOFLOW_MODEL_ID,
+        "raw_model_label": raw_label,
+        "normalized_type": component_type,
+        "confidence": conf,
+    }
+
 
 def _mock_candidates_for_type(component_type: str) -> list[dict[str, Any]]:
     mock_map = {
@@ -75,40 +168,41 @@ def _mock_candidates_for_type(component_type: str) -> list[dict[str, Any]]:
             {
                 "part_number": "RC0603FR-0710KL",
                 "confidence": 0.42,
-                "datasheet_url": "https://example.com/resistor-datasheet"
+                "datasheet_url": "https://example.com/resistor-datasheet",
             }
         ],
         "capacitor": [
             {
                 "part_number": "CL10A106KP8NNNC",
                 "confidence": 0.40,
-                "datasheet_url": "https://example.com/capacitor-datasheet"
+                "datasheet_url": "https://example.com/capacitor-datasheet",
             }
         ],
         "ic": [
             {
                 "part_number": "LM358",
                 "confidence": 0.35,
-                "datasheet_url": "https://example.com/ic-datasheet"
+                "datasheet_url": "https://example.com/ic-datasheet",
             }
         ],
         "diode": [
             {
                 "part_number": "1N4148",
                 "confidence": 0.38,
-                "datasheet_url": "https://example.com/diode-datasheet"
+                "datasheet_url": "https://example.com/diode-datasheet",
             }
         ],
         "connector": [
             {
                 "part_number": "HDR-2.54-8P",
                 "confidence": 0.30,
-                "datasheet_url": "https://example.com/connector-datasheet"
+                "datasheet_url": "https://example.com/connector-datasheet",
             }
         ],
     }
 
     return mock_map.get(component_type, [])
+
 
 def _normalize_prediction(pred: dict[str, Any]) -> dict[str, Any] | None:
     raw_label = str(pred.get("class", "unknown")).strip()
@@ -132,10 +226,12 @@ def _normalize_prediction(pred: dict[str, Any]) -> dict[str, Any] | None:
         "confidence": conf,
         "bbox": bbox,
         "source_label": raw_label,
-        "label": _make_component_label(component_type),
-        "details": _make_component_details(component_type, raw_label),
-        "candidates":  _mock_candidates_for_type(component_type),
+        "detection": _make_detection(component_type, raw_label, conf),
+        "enrichment": _make_enrichment(component_type, raw_label),
+        "label": _make_component_label(component_type, raw_label),
+        "candidates": _mock_candidates_for_type(component_type),
     }
+
 
 def detect_components_bgr(image_bgr: np.ndarray) -> dict[str, Any]:
     if not ROBOFLOW_API_KEY:
@@ -162,5 +258,61 @@ def detect_components_bgr(image_bgr: np.ndarray) -> dict[str, Any]:
         normalized = _normalize_prediction(pred)
         if normalized is not None:
             components.append(normalized)
+
+    components.sort(key=lambda c: float(c.get("confidence", 0.0)), reverse=True)
+
+    enriched_count = 0
+
+    for component in components:
+        if enriched_count >= LLM_ENRICH_MAX_COMPONENTS:
+            break
+
+        if not _should_enrich_component(component):
+            continue
+
+        x, y, w, h = component["bbox"]
+
+        x0 = max(0, x)
+        y0 = max(0, y)
+        x1 = min(image_bgr.shape[1], x + w)
+        y1 = min(image_bgr.shape[0], y + h)
+
+        if x1 <= x0 or y1 <= y0:
+            continue
+
+        component_crop = image_bgr[y0:y1, x0:x1]
+
+        neighborhood_crop = None
+        if LLM_USE_NEIGHBORHOOD_CROP:
+            pad_x = max(w // 2, 16)
+            pad_y = max(h // 2, 16)
+
+            nx0 = max(0, x0 - pad_x)
+            ny0 = max(0, y0 - pad_y)
+            nx1 = min(image_bgr.shape[1], x1 + pad_x)
+            ny1 = min(image_bgr.shape[0], y1 + pad_y)
+
+            if nx1 > nx0 and ny1 > ny0:
+                neighborhood_crop = image_bgr[ny0:ny1, nx0:nx1]
+
+        try:
+            enrichment = enrich_component(
+                component=component,
+                component_crop_bgr=component_crop,
+                neighborhood_crop_bgr=neighborhood_crop,
+            )
+
+            component["enrichment"] = enrichment
+
+            if enrichment.get("display_name"):
+                component["label"]["title"] = enrichment["display_name"]
+
+            if enrichment.get("one_line_label"):
+                component["label"]["subtitle"] = enrichment["one_line_label"]
+
+            enriched_count += 1
+
+        except Exception as e:
+            print(f"[LLM enrichment failed for {component.get('component_id', 'unknown')}] {e}")
 
     return {"components": components}

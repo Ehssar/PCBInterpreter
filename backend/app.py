@@ -1,5 +1,8 @@
 from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import JSONResponse, Response
+from dotenv import load_dotenv
+load_dotenv()
+
 import os
 import time
 import hashlib
@@ -86,6 +89,11 @@ def build_analyze_response(
         "mode": mode,
         "label_visibility_default": "hidden",
         "component_count": len(components),
+        "board_context": {
+            "summary": None,
+            "region_hints": [],
+            "notes": [],
+        },
         "components": components,
     }
 

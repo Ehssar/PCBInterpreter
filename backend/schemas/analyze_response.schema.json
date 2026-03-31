@@ -1,0 +1,246 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/schemas/analyze_response.schema.json",
+  "title": "AnalyzeResponse",
+  "type": "object",
+  "required": [
+    "request_id",
+    "board_id",
+    "timing_ms",
+    "image_bytes",
+    "mode",
+    "label_visibility_default",
+    "component_count",
+    "components",
+    "board_context"
+  ],
+  "properties": {
+    "request_id": {
+      "type": "string"
+    },
+    "board_id": {
+      "type": "string"
+    },
+    "timing_ms": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "image_bytes": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["model", "mock", "auto"]
+    },
+    "label_visibility_default": {
+      "type": "string",
+      "enum": ["hidden", "visible"]
+    },
+    "component_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "fallback_reason": {
+      "type": ["string", "null"]
+    },
+    "board_context": {
+      "type": "object",
+      "required": ["summary", "region_hints", "notes"],
+      "properties": {
+        "summary": {
+          "type": ["string", "null"]
+        },
+        "region_hints": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "notes": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "components": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/component"
+      }
+    }
+  },
+  "$defs": {
+    "component": {
+      "type": "object",
+      "required": [
+        "component_id",
+        "type",
+        "confidence",
+        "bbox",
+        "source_label",
+        "detection",
+        "enrichment",
+        "label",
+        "candidates"
+      ],
+      "properties": {
+        "component_id": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "resistor",
+            "capacitor",
+            "ic",
+            "connector",
+            "diode",
+            "transistor",
+            "inductor",
+            "led",
+            "unknown"
+          ]
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0
+        },
+        "bbox": {
+          "type": "array",
+          "items": { "type": "integer" },
+          "minItems": 4,
+          "maxItems": 4
+        },
+        "source_label": {
+          "type": "string"
+        },
+        "detection": {
+          "$ref": "#/$defs/detection"
+        },
+        "enrichment": {
+          "$ref": "#/$defs/enrichment"
+        },
+        "label": {
+          "$ref": "#/$defs/label"
+        },
+        "candidates": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/candidate"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "detection": {
+      "type": "object",
+      "required": [
+        "source",
+        "model_id",
+        "raw_model_label",
+        "normalized_type",
+        "confidence"
+      ],
+      "properties": {
+        "source": {
+          "type": "string"
+        },
+        "model_id": {
+          "type": "string"
+        },
+        "raw_model_label": {
+          "type": "string"
+        },
+        "normalized_type": {
+          "type": "string"
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0
+        }
+      },
+      "additionalProperties": false
+    },
+    "enrichment": {
+      "type": "object",
+      "required": [
+        "display_name",
+        "one_line_label",
+        "function_summary",
+        "confidence_note",
+        "ocr_text",
+        "datasheet_url",
+        "needs_human_verification",
+        "datasheet_search_terms"
+      ],
+      "properties": {
+        "display_name": {
+          "type": ["string", "null"]
+        },
+        "one_line_label": {
+          "type": ["string", "null"]
+        },
+        "function_summary": {
+          "type": ["string", "null"]
+        },
+        "confidence_note": {
+          "type": ["string", "null"]
+        },
+        "ocr_text": {
+          "type": ["string", "null"]
+        },
+        "datasheet_url": {
+          "type": ["string", "null"]
+        },
+        "needs_human_verification": {
+          "type": "boolean"
+        },
+        "datasheet_search_terms": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "label": {
+      "type": "object",
+      "required": ["title", "subtitle", "visible", "pinned"],
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "subtitle": {
+          "type": "string"
+        },
+        "visible": {
+          "type": "boolean"
+        },
+        "pinned": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "candidate": {
+      "type": "object",
+      "required": ["part_number", "confidence", "datasheet_url"],
+      "properties": {
+        "part_number": {
+          "type": "string"
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0
+        },
+        "datasheet_url": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

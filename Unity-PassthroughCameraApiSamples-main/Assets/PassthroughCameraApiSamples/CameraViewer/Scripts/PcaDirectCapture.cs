@@ -67,54 +67,33 @@ public class PcaDirectCapture : MonoBehaviour
         int width = source.width;
         int height = source.height;
 
-        RenderTexture rt = RenderTexture.GetTemporary(
-            width,
-            height,
-            0,
-            RenderTextureFormat.ARGB32,
-            RenderTextureReadWrite.sRGB
-        );
+        RenderTexture rt = new RenderTexture(width, height, 0, RenderTextureFormat.ARGB32);
+        rt.Create();
+
+        RenderTexture prev = RenderTexture.active;
 
         try
         {
+            // Force proper rendering into RT
             Graphics.Blit(source, rt);
+
+            RenderTexture.active = rt;
+
+            Texture2D cpuTex = new Texture2D(width, height, TextureFormat.RGB24, false);
+            cpuTex.ReadPixels(new Rect(0, 0, width, height), 0, 0);
+            cpuTex.Apply();
+
+            onSuccess?.Invoke(cpuTex);
         }
         catch (Exception e)
         {
-            RenderTexture.ReleaseTemporary(rt);
-            busy = false;
-            onError?.Invoke($"Graphics.Blit failed: {e.Message}");
-            return;
+            onError?.Invoke($"ReadPixels failed: {e.Message}");
         }
-
-        AsyncGPUReadback.Request(rt, 0, TextureFormat.RGBA32, request =>
+        finally
         {
-            try
-            {
-                if (request.hasError)
-                {
-                    busy = false;
-                    onError?.Invoke("AsyncGPUReadback failed after blit.");
-                    return;
-                }
-
-                var data = request.GetData<byte>();
-                Texture2D cpuTex = new Texture2D(width, height, TextureFormat.RGBA32, false);
-                cpuTex.LoadRawTextureData(data);
-                cpuTex.Apply();
-
-                busy = false;
-                onSuccess?.Invoke(cpuTex);
-            }
-            catch (Exception e)
-            {
-                busy = false;
-                onError?.Invoke($"Failed to build CPU texture after blit: {e.Message}");
-            }
-            finally
-            {
-                RenderTexture.ReleaseTemporary(rt);
-            }
-        });
+            RenderTexture.active = prev;
+            rt.Release();
+            busy = false;
+        }
     }
 }
