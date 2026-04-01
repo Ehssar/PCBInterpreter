@@ -9,11 +9,14 @@ public class BoardSession
     public string mode;
     public long analyzedAtUnixMs;
 
-    public bool labelsVisible;
-    public string visibilityMode; // "hidden", "focused", "all"
+    public int imageWidth;
+    public int imageHeight;
 
-    public List<ComponentResult> components = new List<ComponentResult>();
+    public bool labelsVisible;
+    public string visibilityMode;
+
+    public List<ComponentResult> components = new();
 
     public string selectedComponentId;
-    public List<string> pinnedComponentIds = new List<string>();
+    public List<string> pinnedComponentIds = new();
 }

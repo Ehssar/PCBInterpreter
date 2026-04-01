@@ -119,6 +119,37 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &4428477
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4428478}
+  m_Layer: 0
+  m_Name: SpawnedLabels
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4428478
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4428477}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1747044976}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &123746823
 GameObject:
   m_ObjectHideFlags: 0
@@ -1907,6 +1938,14 @@ PrefabInstance:
       propertyPath: TargetMaterial
       value: 
       objectReference: {fileID: 2100000, guid: acc9df4a6797c6949bc6c62f07d988b8, type: 2}
+    - target: {fileID: 1748868316715821956, guid: abfaad578d05e4a09838223134c41c46, type: 3}
+      propertyPath: RequestedResolution.x
+      value: 1280
+      objectReference: {fileID: 0}
+    - target: {fileID: 1748868316715821956, guid: abfaad578d05e4a09838223134c41c46, type: 3}
+      propertyPath: RequestedResolution.y
+      value: 960
+      objectReference: {fileID: 0}
     - target: {fileID: 7047676844597515174, guid: abfaad578d05e4a09838223134c41c46, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -1953,7 +1992,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7847449403238870662, guid: abfaad578d05e4a09838223134c41c46, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -1992,6 +2031,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PcaDirectCapture
   pca: {fileID: 1608124433}
+  logRuntimeState: 1
+  runtimeLogIntervalSeconds: 2
+  autoRestartDelaySeconds: 5
+  autoRestartIfNotPlaying: 1
 --- !u!1 &1721784376
 GameObject:
   m_ObjectHideFlags: 0
@@ -2159,12 +2202,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LabelSpawner
   boardSessionManager: {fileID: 916929961}
-  labelParent: {fileID: 1747044976}
+  labelParent: {fileID: 4428478}
   targetCamera: {fileID: 1848740389}
   labelScale: {x: 0.0025, y: 0.0025, z: 0.0025}
   zOffset: 2
   yOffset: 0.05
   fontSize: 4
+  faceCameraEveryFrame: 1
 --- !u!4 &1747044976
 Transform:
   m_ObjectHideFlags: 0
@@ -2177,7 +2221,8 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0.74}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 4428478}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1798160513

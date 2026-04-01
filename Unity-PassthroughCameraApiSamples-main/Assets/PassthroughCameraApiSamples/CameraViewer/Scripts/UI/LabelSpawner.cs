@@ -14,6 +14,7 @@ public class LabelSpawner : MonoBehaviour
     [SerializeField] private float zOffset = 2.0f;
     [SerializeField] private float yOffset = 0.05f;
     [SerializeField] private int fontSize = 4;
+    [SerializeField] private bool faceCameraEveryFrame = true;
 
     private readonly Dictionary<string, GameObject> spawnedLabels = new();
 
@@ -46,12 +47,14 @@ public class LabelSpawner : MonoBehaviour
         }
     }
 
-    private void Update()
+    private void LateUpdate()
     {
         RefreshVisibility();
 
-        // Optional: keep labels facing the camera
-        FaceLabelsTowardCamera();
+        if (faceCameraEveryFrame)
+        {
+            FaceLabelsTowardCamera();
+        }
     }
 
     private void HandleSessionCreated(BoardSession session)
@@ -71,8 +74,10 @@ public class LabelSpawner : MonoBehaviour
     {
         foreach (var component in session.components)
         {
-            if (component == null || string.IsNullOrEmpty(component.component_id))
+            if (component == null || string.IsNullOrWhiteSpace(component.component_id))
+            {
                 continue;
+            }
 
             GameObject labelObject = CreateLabelObject(component);
             spawnedLabels[component.component_id] = labelObject;
@@ -83,49 +88,59 @@ public class LabelSpawner : MonoBehaviour
     {
         GameObject go = new GameObject($"Label_{component.component_id}");
         go.transform.SetParent(labelParent, false);
+        go.transform.localScale = labelScale;
+        go.transform.position = ComputeWorldPosition(component);
 
         TextMeshPro tmp = go.AddComponent<TextMeshPro>();
-        tmp.text = GetLabelText(component);
+        tmp.text = BuildLabelText(component);
         tmp.fontSize = fontSize;
         tmp.alignment = TextAlignmentOptions.Center;
         tmp.enableWordWrapping = false;
-
-        go.transform.localScale = labelScale;
-        go.transform.position = ComputeWorldPosition(component);
+        tmp.overflowMode = TextOverflowModes.Overflow;
 
         return go;
     }
 
-    private string GetLabelText(ComponentResult component)
+    private string BuildLabelText(ComponentResult component)
     {
-        if (component.label != null && !string.IsNullOrEmpty(component.label.title))
+        if (component == null)
         {
-            return component.label.title;
+            return "Unknown Component";
         }
 
-        return component.type;
+        string title = component.GetResolvedLabelTitle();
+        string subtitle = component.GetResolvedLabelSubtitle();
+
+        if (string.IsNullOrWhiteSpace(subtitle))
+        {
+            return title;
+        }
+
+        return $"{title}\n{subtitle}";
     }
 
     private Vector3 ComputeWorldPosition(ComponentResult component)
     {
-        if (targetCamera == null || component.bbox == null || component.bbox.Length < 4)
+        if (targetCamera == null || component == null || component.bbox == null || component.bbox.Length < 4)
         {
             return transform.position;
         }
 
-        int x = component.bbox[0];
-        int y = component.bbox[1];
-        int w = component.bbox[2];
-        int h = component.bbox[3];
+        float x = component.bbox[0];
+        float y = component.bbox[1];
+        float w = component.bbox[2];
 
         float centerX = x + (w * 0.5f);
         float topY = y;
 
-        float screenX = centerX;
-        float screenY = Screen.height - topY;
+        float cameraPixelWidth = Mathf.Max(1f, targetCamera.pixelWidth);
+        float cameraPixelHeight = Mathf.Max(1f, targetCamera.pixelHeight);
 
-        Vector3 screenPoint = new Vector3(screenX, screenY, zOffset);
-        Vector3 worldPoint = targetCamera.ScreenToWorldPoint(screenPoint);
+        float normalizedX = Mathf.Clamp01(centerX / cameraPixelWidth);
+        float normalizedY = Mathf.Clamp01(1f - (topY / cameraPixelHeight));
+
+        Vector3 viewportPoint = new Vector3(normalizedX, normalizedY, zOffset);
+        Vector3 worldPoint = targetCamera.ViewportToWorldPoint(viewportPoint);
         worldPoint.y += yOffset;
 
         return worldPoint;
@@ -140,29 +155,38 @@ public class LabelSpawner : MonoBehaviour
         }
 
         BoardSession session = boardSessionManager.CurrentSession;
-        if (session.components == null)
+        if (session == null || session.components == null)
+        {
+            SetAllLabelsActive(false);
             return;
+        }
 
         foreach (var component in session.components)
         {
-            if (component == null || string.IsNullOrEmpty(component.component_id))
+            if (component == null || string.IsNullOrWhiteSpace(component.component_id))
+            {
                 continue;
+            }
 
             if (!spawnedLabels.TryGetValue(component.component_id, out GameObject labelObject) || labelObject == null)
+            {
                 continue;
+            }
 
-            bool visible = component.label != null && component.label.visible;
+            bool visible = component.IsLabelVisible();
             labelObject.SetActive(visible);
 
-            if (visible)
+            if (!visible)
             {
-                labelObject.transform.position = ComputeWorldPosition(component);
+                continue;
+            }
 
-                TextMeshPro tmp = labelObject.GetComponent<TextMeshPro>();
-                if (tmp != null)
-                {
-                    tmp.text = GetLabelText(component);
-                }
+            labelObject.transform.position = ComputeWorldPosition(component);
+
+            TextMeshPro tmp = labelObject.GetComponent<TextMeshPro>();
+            if (tmp != null)
+            {
+                tmp.text = BuildLabelText(component);
             }
         }
     }
@@ -170,15 +194,23 @@ public class LabelSpawner : MonoBehaviour
     private void FaceLabelsTowardCamera()
     {
         if (targetCamera == null)
+        {
             return;
+        }
 
         foreach (var kvp in spawnedLabels)
         {
             GameObject labelObject = kvp.Value;
             if (labelObject == null || !labelObject.activeSelf)
+            {
                 continue;
+            }
 
-            labelObject.transform.forward = labelObject.transform.position - targetCamera.transform.position;
+            Vector3 direction = labelObject.transform.position - targetCamera.transform.position;
+            if (direction.sqrMagnitude > 0.0001f)
+            {
+                labelObject.transform.forward = direction.normalized;
+            }
         }
     }
 

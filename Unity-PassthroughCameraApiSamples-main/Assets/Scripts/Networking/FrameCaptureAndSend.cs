@@ -115,7 +115,20 @@ public class FrameCaptureAndSend : MonoBehaviour
 
             Debug.Log($"Using passthrough frame: {tex.width}x{tex.height}");
 
+            if (tex.width <= 0 || tex.height <= 0)
+            {
+                overlay?.SetStatus("Capture failed: invalid texture dimensions");
+                Debug.LogError("Captured texture had invalid dimensions.");
+                yield break;
+            }
+
             byte[] jpg = tex.EncodeToJPG(jpegQuality);
+            if (jpg == null || jpg.Length == 0)
+            {
+                overlay?.SetStatus("Capture failed: EncodeToJPG returned no data");
+                Debug.LogError("EncodeToJPG returned null or empty bytes.");
+                yield break;
+            }
             overlay?.SetStatus($"Sending {jpg.Length} bytes...");
             Debug.Log($"Captured frame: {jpg.Length} bytes");
 
