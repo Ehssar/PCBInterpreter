@@ -1,9 +1,35 @@
 using UnityEngine;
 using TMPro;
+using System.Collections;
 
 public class JsonOverlayUI : MonoBehaviour
 {
     [SerializeField] private TMP_Text text;
+
+    private Coroutine clearRoutine;
+
+    public void SetStatusTimed(string message, float duration)
+    {
+        if (text == null) return;
+
+        text.text = message;
+
+        // Stop any existing timer
+        if (clearRoutine != null)
+            StopCoroutine(clearRoutine);
+
+        clearRoutine = StartCoroutine(ClearAfterDelay(duration));
+    }
+
+    private IEnumerator ClearAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+
+        if (text != null)
+            text.text = "";
+
+        clearRoutine = null;
+    }
 
     public void SetStatus(string s)
     {

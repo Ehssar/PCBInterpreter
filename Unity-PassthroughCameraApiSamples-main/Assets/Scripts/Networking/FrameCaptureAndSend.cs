@@ -51,6 +51,7 @@ public class FrameCaptureAndSend : MonoBehaviour
             if (Time.time - lastSendTime >= minSecondsBetweenSends)
             {
                 lastSendTime = Time.time;
+                overlay?.SetStatus("Analyzing...");
                 StartCoroutine(CaptureAndSend());
             }
         }
@@ -60,7 +61,6 @@ public class FrameCaptureAndSend : MonoBehaviour
     private IEnumerator CaptureAndSend()
     {
         inFlight = true;
-        overlay?.SetStatus("Capturing...");
 
         yield return new WaitForEndOfFrame();
 
@@ -129,14 +129,14 @@ public class FrameCaptureAndSend : MonoBehaviour
                 Debug.LogError("EncodeToJPG returned null or empty bytes.");
                 yield break;
             }
-            overlay?.SetStatus($"Sending {jpg.Length} bytes...");
+        
             Debug.Log($"Captured frame: {jpg.Length} bytes");
 
             var form = new WWWForm();
             form.AddBinaryData("file", jpg, "frame.jpg", "image/jpeg");
 
             using var req = UnityWebRequest.Post($"{BaseUrl}/analyze", form);
-            req.timeout = 20;
+            req.timeout = 60;
 
             Debug.Log("POST URL = " + $"{BaseUrl}/analyze");
             yield return req.SendWebRequest();
@@ -174,6 +174,7 @@ public class FrameCaptureAndSend : MonoBehaviour
                 if (boardSessionManager != null)
                 {
                     boardSessionManager.CreateSession(resp);
+                    overlay?.SetStatusTimed("Labels shown", 2.0f);
                     // temporary visual test
                     boardSessionManager.ShowAllLabels();
                 }
@@ -181,13 +182,6 @@ public class FrameCaptureAndSend : MonoBehaviour
                 {
                     Debug.LogWarning("BoardSessionManager reference is missing.");
                 }
-
-                // Safely Keep overlay as debug/status UI, not the source of truth.
-                int count = resp.components != null ? resp.components.Count : 0;
-                overlay?.SetStatus($"Analysis complete: mode={resp.mode}, components={count}");
-
-                // Optional debug view:
-                // overlay?.SetResponse(resp);
             }
         }
         finally

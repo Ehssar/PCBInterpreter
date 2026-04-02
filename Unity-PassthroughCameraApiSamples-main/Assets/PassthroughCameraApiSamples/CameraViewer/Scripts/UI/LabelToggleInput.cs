@@ -4,14 +4,23 @@ public class LabelToggleInput : MonoBehaviour
 {
     [SerializeField] private BoardSessionManager boardSessionManager;
     [SerializeField] private JsonOverlayUI overlay;
+    [SerializeField] private LabelSpawner labelSpawner;
 
     private void Update()
     {
         // Left secondary hand trigger toggle
         if (OVRInput.GetDown(OVRInput.Button.PrimaryHandTrigger))
         {
-            Debug.Log("LEFT trigger pressed");
+            Debug.Log("LEFT grip pressed");
             ToggleLabels();
+        }
+
+        if (OVRInput.GetDown(OVRInput.Button.PrimaryIndexTrigger))
+        {
+            labelSpawner.ToggleDetailsMode();
+
+            if (overlay != null)
+                overlay.SetStatusTimed("Details Mode", 2.0f);
         }
     }
 
@@ -41,13 +50,13 @@ public class LabelToggleInput : MonoBehaviour
         if (session.labelsVisible)
         {
             boardSessionManager.HideAllLabels();
-            overlay?.SetStatus("Labels hidden");
+            overlay?.SetStatusTimed("Labels hidden", 2.0f);
             Debug.Log("LabelToggleInput: labels hidden.");
         }
         else
         {
             boardSessionManager.ShowAllLabels();
-            overlay?.SetStatus("Labels shown");
+            overlay?.SetStatusTimed("Labels shown", 2.0f);
             Debug.Log("LabelToggleInput: labels shown.");
         }
     }

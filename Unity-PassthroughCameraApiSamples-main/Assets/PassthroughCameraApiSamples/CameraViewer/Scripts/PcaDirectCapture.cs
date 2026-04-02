@@ -28,7 +28,7 @@ public class PcaDirectCapture : MonoBehaviour
 
     void Awake()
     {
-        Debug.Log("[Passthrough] PcaDirectCapture Awake");
+        // Debug.Log("[Passthrough] PcaDirectCapture Awake");
 
         if (pca == null)
         {
@@ -42,7 +42,7 @@ public class PcaDirectCapture : MonoBehaviour
         }
         else
         {
-            Debug.Log("[Passthrough] Found PassthroughCameraAccess component.");
+            // Debug.Log("[Passthrough] Found PassthroughCameraAccess component.");
         }
     }
 
@@ -70,12 +70,12 @@ public class PcaDirectCapture : MonoBehaviour
         {
             nextStateLogTime = Time.time + runtimeLogIntervalSeconds;
 
-            Debug.Log(
-                $"[Passthrough] Runtime State => enabled={pca.enabled}, " +
-                $"isPlaying={pca.IsPlaying}, " +
-                $"updatedThisFrame={pca.IsUpdatedThisFrame}, " +
-                $"resolution={pca.CurrentResolution}"
-            );
+            // Debug.Log(
+            //     $"[Passthrough] Runtime State => enabled={pca.enabled}, " +
+            //     $"isPlaying={pca.IsPlaying}, " +
+            //     $"updatedThisFrame={pca.IsUpdatedThisFrame}, " +
+            //     $"resolution={pca.CurrentResolution}"
+            // );
         }
 
         if (autoRestartIfNotPlaying &&

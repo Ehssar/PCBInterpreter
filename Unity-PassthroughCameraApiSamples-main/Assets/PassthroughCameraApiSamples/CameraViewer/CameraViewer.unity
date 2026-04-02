@@ -251,6 +251,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::LabelToggleInput
   boardSessionManager: {fileID: 916929961}
   overlay: {fileID: 446239324}
+  labelSpawner: {fileID: 1747044975}
 --- !u!4 &176878495
 Transform:
   m_ObjectHideFlags: 0
@@ -649,7 +650,7 @@ Canvas:
   serializedVersion: 3
   m_RenderMode: 2
   m_Camera: {fileID: 1848740389}
-  m_PlaneDistance: 1
+  m_PlaneDistance: 1.5
   m_PixelPerfect: 0
   m_ReceivesEvents: 1
   m_OverrideSorting: 0
@@ -784,7 +785,7 @@ MonoBehaviour:
   editorHost: 127.0.0.1
   androidHost: https://kip-unerasing-twitchily.ngrok-free.dev
   port: 8000
-  overlay: {fileID: 0}
+  overlay: {fileID: 446239324}
   boardSessionManager: {fileID: 916929961}
   pcaDirectCapture: {fileID: 1608124434}
   jpegQuality: 75
@@ -2035,6 +2036,9 @@ MonoBehaviour:
   runtimeLogIntervalSeconds: 2
   autoRestartDelaySeconds: 5
   autoRestartIfNotPlaying: 1
+  readyTimeoutSeconds: 1
+  updatedFrameTimeoutSeconds: 0.5
+  gpuReadbackTimeoutSeconds: 1
 --- !u!1 &1721784376
 GameObject:
   m_ObjectHideFlags: 0
@@ -2092,7 +2096,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: HELLO OVERLAY
+  m_text: Center Board
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -2119,14 +2123,14 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 48
-  m_fontSizeBase: 48
+  m_fontSize: 36
+  m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 0
-  m_HorizontalAlignment: 1
+  m_HorizontalAlignment: 2
   m_VerticalAlignment: 256
   m_textAlignment: 65535
   m_characterSpacing: 0
@@ -2204,10 +2208,10 @@ MonoBehaviour:
   boardSessionManager: {fileID: 916929961}
   labelParent: {fileID: 4428478}
   targetCamera: {fileID: 1848740389}
-  labelScale: {x: 0.0025, y: 0.0025, z: 0.0025}
-  zOffset: 2
-  yOffset: 0.05
-  fontSize: 4
+  labelScale: {x: 0.01, y: 0.01, z: 0.01}
+  zOffset: 0.5
+  yOffset: -0.3
+  fontSize: 12
   faceCameraEveryFrame: 1
 --- !u!4 &1747044976
 Transform:
@@ -2217,13 +2221,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1747044974}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0.74}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 4428478}
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1848740388}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1798160513
 PrefabInstance:
@@ -2290,6 +2294,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 1747044976}
   - {fileID: 446239323}
   - {fileID: 1094083036}
   m_Father: {fileID: 131451331}
@@ -2479,5 +2484,4 @@ SceneRoots:
   - {fileID: 462102557}
   - {fileID: 1905038263}
   - {fileID: 916929962}
-  - {fileID: 1747044976}
   - {fileID: 176878495}

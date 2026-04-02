@@ -13,10 +13,12 @@ public class LabelSpawner : MonoBehaviour
     [SerializeField] private Vector3 labelScale = new Vector3(0.0025f, 0.0025f, 0.0025f);
     [SerializeField] private float zOffset = 2.0f;
     [SerializeField] private float yOffset = 0.05f;
-    [SerializeField] private int fontSize = 4;
+    [SerializeField] private int fontSize = 5;
     [SerializeField] private bool faceCameraEveryFrame = true;
 
     private readonly Dictionary<string, GameObject> spawnedLabels = new();
+
+    private bool detailsMode = false;
 
     private void Awake()
     {
@@ -57,6 +59,23 @@ public class LabelSpawner : MonoBehaviour
         }
     }
 
+    public void ToggleDetailsMode()
+    {
+        detailsMode = !detailsMode;
+        RefreshVisibility();
+    }
+
+    public bool IsDetailsMode()
+    {
+        return detailsMode;
+    }
+
+    public void SetDetailsMode(bool enabled)
+    {
+        detailsMode = enabled;
+        RefreshVisibility();
+    }
+
     private void HandleSessionCreated(BoardSession session)
     {
         ClearSpawnedLabels();
@@ -95,7 +114,7 @@ public class LabelSpawner : MonoBehaviour
         tmp.text = BuildLabelText(component);
         tmp.fontSize = fontSize;
         tmp.alignment = TextAlignmentOptions.Center;
-        tmp.enableWordWrapping = false;
+        tmp.enableWordWrapping = true;
         tmp.overflowMode = TextOverflowModes.Overflow;
 
         return go;
@@ -108,15 +127,78 @@ public class LabelSpawner : MonoBehaviour
             return "Unknown Component";
         }
 
-        string title = component.GetResolvedLabelTitle();
-        string subtitle = component.GetResolvedLabelSubtitle();
+        if (!detailsMode)
+        {
+            string title = component.GetResolvedLabelTitle();
+            string subtitle = component.GetResolvedLabelSubtitle();
 
-        if (string.IsNullOrWhiteSpace(subtitle))
+            if (string.IsNullOrWhiteSpace(subtitle))
+            {
+                return title;
+            }
+
+            return $"{title}\n{subtitle}";
+        }
+
+        return BuildDetailedLabelText(component);
+    }
+
+    private string BuildDetailedLabelText(ComponentResult component)
+    {
+        string title = component.GetResolvedLabelTitle();
+
+        // If there is no enrichment, details mode should never show this anyway,
+        // but fall back safely just in case.
+        if (component.enrichment == null)
         {
             return title;
         }
 
-        return $"{title}\n{subtitle}";
+        var e = component.enrichment;
+
+        string displayName = !string.IsNullOrWhiteSpace(e.display_name)
+            ? e.display_name
+            : title;
+
+        string summary = !string.IsNullOrWhiteSpace(e.function_summary)
+            ? e.function_summary
+            : "No summary available.";
+
+        string confidenceLine = component.confidence > 0f
+            ? $"Conf: {component.confidence:F2}"
+            : null;
+
+        string ocrLine = !string.IsNullOrWhiteSpace(e.ocr_text)
+            ? $"OCR: {e.ocr_text}"
+            : null;
+
+        string verifyLine = e.needs_human_verification
+            ? "Verify manually"
+            : null;
+
+        List<string> lines = new List<string>
+        {
+            displayName
+        };
+
+        if (!string.IsNullOrWhiteSpace(confidenceLine))
+        {
+            lines.Add(confidenceLine);
+        }
+
+        lines.Add(summary);
+
+        if (!string.IsNullOrWhiteSpace(ocrLine))
+        {
+            lines.Add(ocrLine);
+        }
+
+        if (!string.IsNullOrWhiteSpace(verifyLine))
+        {
+            lines.Add(verifyLine);
+        }
+
+        return string.Join("\n", lines);
     }
 
     private Vector3 ComputeWorldPosition(ComponentResult component)
@@ -173,7 +255,14 @@ public class LabelSpawner : MonoBehaviour
                 continue;
             }
 
+            bool hasEnrichment = component.enrichment != null;
             bool visible = component.IsLabelVisible();
+
+            if (detailsMode && !hasEnrichment)
+            {
+                visible = false;
+            }
+
             labelObject.SetActive(visible);
 
             if (!visible)
