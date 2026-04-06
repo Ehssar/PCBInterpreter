@@ -87,7 +87,32 @@ public class ComponentResult
 
     public bool IsLabelVisible()
     {
-        return label != null && label.visible;
+        // Default to visible unless explicitly hidden
+        if (label == null) return true;
+        return label.visible;
+    }
+
+    public LabelCategory GetCategory()
+    {
+        string raw = !string.IsNullOrWhiteSpace(type) ? type : source_label;
+
+        if (string.IsNullOrWhiteSpace(raw))
+            return LabelCategory.Unknown;
+
+        raw = raw.Trim().ToLowerInvariant();
+
+        return raw switch
+        {
+            "resistor" => LabelCategory.Resistor,
+            "capacitor" => LabelCategory.Capacitor,
+            "ic" => LabelCategory.IC,
+            "integrated circuit" => LabelCategory.IC,
+            "connector" => LabelCategory.Connector,
+            "diode" => LabelCategory.Diode,
+            "transistor" => LabelCategory.Transistor,
+            "inductor" => LabelCategory.Inductor,
+            _ => LabelCategory.Unknown
+        };
     }
 }
 
@@ -147,4 +172,16 @@ public class CandidatePart
     public string part_number;
     public float confidence;
     public string datasheet_url;
+}
+
+public enum LabelCategory
+{
+    Unknown,
+    Resistor,
+    Capacitor,
+    IC,
+    Connector,
+    Diode,
+    Transistor,
+    Inductor
 }
