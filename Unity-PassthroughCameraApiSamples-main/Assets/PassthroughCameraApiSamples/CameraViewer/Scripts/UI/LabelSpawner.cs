@@ -13,9 +13,12 @@ public class LabelSpawner : MonoBehaviour
 
     [Header("Placement")]
     [SerializeField] private float zOffset = 0.45f;
-    [SerializeField] private float yOffset = 0.05f;
-    [SerializeField] private bool faceCameraEveryFrame = true;
+    [SerializeField] private float yOffset = -0.05f;
+    [SerializeField] private float viewportYOffset = -0.08f;
+
+    [Header("Runtime")]
     [SerializeField] private bool updateAnchorsEveryFrame = false;
+    [SerializeField] private bool forceVisibleForDebug = false;
 
     private readonly Dictionary<string, ComponentLabelCard> spawnedLabels = new();
     private bool detailsMode = false;
@@ -47,9 +50,6 @@ public class LabelSpawner : MonoBehaviour
 
         if (updateAnchorsEveryFrame)
             RefreshAnchorPositions();
-
-        if (faceCameraEveryFrame)
-            FaceLabelsTowardCamera();
     }
 
     public void ToggleDetailsMode()
@@ -98,7 +98,9 @@ public class LabelSpawner : MonoBehaviour
     private ComponentLabelCard CreateLabelCard(ComponentResult component, BoardSession session)
     {
         Vector3 anchorPosition = ComputeWorldPosition(component, session);
+
         Debug.Log($"[LabelSpawner] Creating {component.component_id} at {anchorPosition}");
+
         ComponentLabelCard card = Instantiate(
             labelCardPrefab,
             anchorPosition,
@@ -147,12 +149,18 @@ public class LabelSpawner : MonoBehaviour
             if (detailsMode && !hasEnrichment)
                 visible = false;
 
+            if (forceVisibleForDebug)
+                visible = true;
+
             card.SetVisible(visible);
 
             if (!visible)
                 continue;
 
             card.RefreshText(component, detailsMode);
+
+            if (targetCamera != null)
+                card.SetCameraTarget(targetCamera.transform);
         }
     }
 
@@ -178,23 +186,6 @@ public class LabelSpawner : MonoBehaviour
         }
     }
 
-    private void FaceLabelsTowardCamera()
-    {
-        if (targetCamera == null)
-            return;
-
-        foreach (var kvp in spawnedLabels)
-        {
-            ComponentLabelCard card = kvp.Value;
-            if (card == null || !card.gameObject.activeSelf)
-                continue;
-
-            Vector3 direction = card.transform.position - targetCamera.transform.position;
-            if (direction.sqrMagnitude > 0.0001f)
-                card.transform.forward = direction.normalized;
-        }
-    }
-
     private Vector3 ComputeWorldPosition(ComponentResult component, BoardSession session)
     {
         if (targetCamera == null || component == null || component.bbox == null || component.bbox.Length < 4)
@@ -206,11 +197,12 @@ public class LabelSpawner : MonoBehaviour
         float width = component.bbox[2];
         float height = component.bbox[3];
 
-        // Use the true bbox center
+        // Keep center-based placement, but bias slightly lower within the box.
+        // 0.5f = exact center
+        // 0.6f to 0.75f = slightly lower than center
         float centerX = left + (width * 0.5f);
-        float centerY = top + (height * 0.5f);
+        float anchorY = top + (height * 0.75f);
 
-        // Prefer backend image dimensions
         float sourceWidth = 0f;
         float sourceHeight = 0f;
 
@@ -223,29 +215,23 @@ public class LabelSpawner : MonoBehaviour
                 sourceHeight = session.imageHeight;
         }
 
-        // Fallback only if backend dimensions are missing
         if (sourceWidth <= 0f)
             sourceWidth = Mathf.Max(1f, targetCamera.pixelWidth);
 
         if (sourceHeight <= 0f)
             sourceHeight = Mathf.Max(1f, targetCamera.pixelHeight);
 
-        // Convert image-space pixel coords to viewport-space [0,1]
         float normalizedX = Mathf.Clamp01(centerX / sourceWidth);
-        float normalizedY = Mathf.Clamp01(1f - (centerY / sourceHeight));
 
-        // Cast a ray through that viewport point
+        // Negative value moves labels lower in the user's view.
+        float normalizedY = Mathf.Clamp01(1f - (anchorY / sourceHeight) + viewportYOffset);
+
         Ray ray = targetCamera.ViewportPointToRay(new Vector3(normalizedX, normalizedY, 0f));
-
-        // Place label along ray at configurable depth
         Vector3 worldPoint = ray.origin + ray.direction * zOffset;
-
-        // Small upward bias if desired
-        worldPoint.y += yOffset;
 
         Debug.Log(
             $"[LabelSpawner] bbox=({left:F1},{top:F1},{width:F1},{height:F1}) " +
-            $"center=({centerX:F1},{centerY:F1}) " +
+            $"anchor=({centerX:F1},{anchorY:F1}) " +
             $"src=({sourceWidth:F0},{sourceHeight:F0}) " +
             $"norm=({normalizedX:F3},{normalizedY:F3}) " +
             $"world={worldPoint}"

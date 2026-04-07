@@ -3,7 +3,11 @@ using UnityEngine;
 
 public class ComponentLabelCard : MonoBehaviour
 {
-    [Header("UI")]
+    [Header("Visual")]
+    [SerializeField] private GameObject visualRoot;
+    [SerializeField] private Transform faceTargetRoot;
+
+    [Header("Text")]
     [SerializeField] private TextMeshProUGUI titleText;
     [SerializeField] private TextMeshProUGUI subtitleText;
     [SerializeField] private TextMeshProUGUI detailText;
@@ -36,10 +40,10 @@ public class ComponentLabelCard : MonoBehaviour
 
         RefreshText(component, detailsMode);
         RefreshPosition();
-        Debug.Log(
-            $"[ComponentLabelCard] Init {component.component_id} | " +
-            $"titleText={(titleText != null)} subtitleText={(subtitleText != null)} detailText={(detailText != null)}"
-        );
+
+        if (visualRoot != null)
+            visualRoot.SetActive(true);
+
         initialized = true;
     }
 
@@ -65,7 +69,10 @@ public class ComponentLabelCard : MonoBehaviour
 
     public void SetVisible(bool visible)
     {
-        gameObject.SetActive(visible);
+        if (visualRoot != null)
+            visualRoot.SetActive(visible);
+        else
+            gameObject.SetActive(visible);
     }
 
     public void SetAnchorWorldPosition(Vector3 anchorPos)
@@ -94,11 +101,13 @@ public class ComponentLabelCard : MonoBehaviour
 
         DetectUserMovement();
 
-        if (faceCamera && cameraTarget != null && gameObject.activeSelf)
+        if (faceCamera && cameraTarget != null)
         {
-            Vector3 direction = transform.position - cameraTarget.position;
+            Transform t = faceTargetRoot != null ? faceTargetRoot : transform;
+            Vector3 direction = t.position - cameraTarget.position;
+
             if (direction.sqrMagnitude > 0.0001f)
-                transform.forward = direction.normalized;
+                t.forward = direction.normalized;
         }
     }
 
