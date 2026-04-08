@@ -42,10 +42,10 @@ public class FrameCaptureAndSend : MonoBehaviour
 
     void Update()
     {
-        // Use a button you like; this is common on Quest controllers
-        if (OVRInput.GetDown(OVRInput.Button.SecondaryHandTrigger))
+        // A button on right controller to capture and send frame
+        if (OVRInput.GetDown(OVRInput.Button.One))
         {
-            Debug.Log("Right trigger detected in FrameCaptureAndSend.");
+            Debug.Log("A detected in FrameCaptureAndSend.");
 
             if (inFlight) return; // avoid pilin up requests
             if (Time.time - lastSendTime >= minSecondsBetweenSends)
@@ -151,9 +151,6 @@ public class FrameCaptureAndSend : MonoBehaviour
 
             string json = req.downloadHandler.text;
             Debug.Log($"Analyze response: {json}");
-
-            // Optional: show raw JSON briefly for debugging
-            // overlay?.SetStatus(json);
 
             AnalyzeResponse resp = null;
             try

@@ -8,14 +8,15 @@ public class LabelToggleInput : MonoBehaviour
 
     private void Update()
     {
-        // Left secondary hand trigger toggle
-        if (OVRInput.GetDown(OVRInput.Button.PrimaryHandTrigger))
+        // Left controller X to toggle label visibility
+        if (OVRInput.GetDown(OVRInput.Button.Three))
         {
-            Debug.Log("LEFT grip pressed");
+            Debug.Log("X pressed");
             ToggleLabels();
         }
 
-        if (OVRInput.GetDown(OVRInput.Button.PrimaryIndexTrigger))
+        // Left controller Y for toggling details mode (additional info on labels)
+        if (OVRInput.GetDown(OVRInput.Button.Four))
         {
             labelSpawner.ToggleDetailsMode();
 

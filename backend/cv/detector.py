@@ -72,7 +72,7 @@ def _make_component_label(component_type: str, raw_label: str) -> dict[str, Any]
 
     return {
         "title": title,
-        "subtitle": "Tap or ask for details",
+        "subtitle": "Press Y for details",
         "visible": True,
         "pinned": False,
     }
