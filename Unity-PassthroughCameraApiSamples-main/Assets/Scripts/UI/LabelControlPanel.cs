@@ -10,6 +10,12 @@ public class LabelControlPanel : MonoBehaviour
     // The script should live on an always-active anchor parent.
     [SerializeField] private GameObject panelVisualRoot;
 
+    [Header("User Facing")]
+    [SerializeField] private Transform headTransform;
+    [SerializeField] private bool faceUserOnRelease = true;
+    [SerializeField] private bool smoothFaceUser = true;
+    [SerializeField] private float faceUserSmoothSpeed = 10f;
+
     [Header("Subpanels")]
     [SerializeField] private GameObject categoryPanel;
     [SerializeField] private GameObject controlsPanel;
@@ -17,12 +23,25 @@ public class LabelControlPanel : MonoBehaviour
     [Header("Input")]
     [SerializeField] private OVRInput.Button toggleButton = OVRInput.Button.Two; // B button
 
+    [Header("Grab")]
+    [SerializeField] private Oculus.Interaction.GrabInteractable grabInteractable;
+
     private bool panelVisible = true;
+
+    // Grab state
+    private bool isGrabbed = false;
+    private bool shouldSmoothRotateToUser = false;
+    private bool wasGrabbedLastFrame = false;
 
     private IEnumerator Start()
     {
         yield return new WaitForSeconds(0.2f);
+
+        if (headTransform == null && Camera.main != null)
+            headTransform = Camera.main.transform;
+
         PlacePanel();
+
         if (panelVisualRoot != null)
         {
             panelVisualRoot.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
@@ -30,6 +49,60 @@ public class LabelControlPanel : MonoBehaviour
 
         SetPanelVisible(panelVisible);
         ShowCategoryPanel();
+    }
+
+    private void Update()
+    {
+        if (OVRInput.GetDown(toggleButton))
+        {
+            TogglePanel();
+        }
+
+        UpdateGrabState();
+    }
+
+    private void UpdateGrabState()
+    {
+        if (grabInteractable == null)
+            return;
+
+        bool isCurrentlyGrabbed =
+            grabInteractable.State == Oculus.Interaction.InteractableState.Select;
+
+        if (isCurrentlyGrabbed && !wasGrabbedLastFrame)
+        {
+            BeginGrab();
+        }
+        else if (!isCurrentlyGrabbed && wasGrabbedLastFrame)
+        {
+            EndGrab();
+        }
+
+        wasGrabbedLastFrame = isCurrentlyGrabbed;
+    }
+
+    private void LateUpdate()
+    {
+        if (!faceUserOnRelease || !smoothFaceUser || !shouldSmoothRotateToUser || isGrabbed)
+            return;
+
+        if (headTransform == null)
+            return;
+
+        Quaternion targetRotation = GetYawFacingRotation();
+
+        transform.rotation = Quaternion.Slerp(
+            transform.rotation,
+            targetRotation,
+            faceUserSmoothSpeed * Time.deltaTime
+        );
+
+        float angle = Quaternion.Angle(transform.rotation, targetRotation);
+        if (angle < 0.5f)
+        {
+            transform.rotation = targetRotation;
+            shouldSmoothRotateToUser = false;
+        }
     }
 
     private void PlacePanel()
@@ -47,7 +120,7 @@ public class LabelControlPanel : MonoBehaviour
 
         float forwardDistance = 0.45f;
         float rightOffset = 0.22f;
-        float verticalOffset = 0.10f;   // raise it noticeably above current camera origin
+        float verticalOffset = 0.10f;
 
         Vector3 comfortAnchor = cam.position + Vector3.up * verticalOffset;
 
@@ -58,18 +131,49 @@ public class LabelControlPanel : MonoBehaviour
 
         transform.position = spawnPos;
 
-        Vector3 lookDir = cam.position - transform.position;
-        lookDir = Vector3.ProjectOnPlane(lookDir, Vector3.up).normalized;
-
-        if (lookDir.sqrMagnitude > 0.001f)
-            transform.rotation = Quaternion.LookRotation(lookDir, Vector3.up);
+        SnapFacingUser();
     }
 
-    private void Update()
+    private Quaternion GetYawFacingRotation()
     {
-        if (OVRInput.GetDown(toggleButton))
+        if (headTransform == null)
+            return transform.rotation;
+
+        Vector3 lookDir = headTransform.position - transform.position;
+        lookDir = Vector3.ProjectOnPlane(lookDir, Vector3.up);
+
+        if (lookDir.sqrMagnitude < 0.001f)
+            return transform.rotation;
+
+        return Quaternion.LookRotation(lookDir.normalized, Vector3.up);
+    }
+
+    public void SnapFacingUser()
+    {
+        transform.rotation = GetYawFacingRotation();
+        shouldSmoothRotateToUser = false;
+    }
+
+    public void BeginGrab()
+    {
+        isGrabbed = true;
+        shouldSmoothRotateToUser = false;
+    }
+
+    public void EndGrab()
+    {
+        isGrabbed = false;
+
+        if (!faceUserOnRelease)
+            return;
+
+        if (smoothFaceUser)
         {
-            TogglePanel();
+            shouldSmoothRotateToUser = true;
+        }
+        else
+        {
+            SnapFacingUser();
         }
     }
 
