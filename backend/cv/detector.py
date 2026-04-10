@@ -9,11 +9,13 @@ import cv2
 import numpy as np
 import requests
 
+SESSION = requests.Session()
+
 ROBOFLOW_API_KEY = os.getenv("ROBOFLOW_API_KEY", "")
 ROBOFLOW_MODEL_ID = os.getenv("ROBOFLOW_MODEL_ID", "printed-circuit-board/3")
 ROBOFLOW_BASE_URL = os.getenv("ROBOFLOW_BASE_URL", "https://serverless.roboflow.com")
 ROBOFLOW_TIMEOUT_SECONDS = float(os.getenv("ROBOFLOW_TIMEOUT_SECONDS", "20"))
-MIN_CONFIDENCE = float(os.getenv("MIN_CONFIDENCE", "0.25"))
+MIN_CONFIDENCE = float(os.getenv("MIN_CONFIDENCE", "0.4"))
 
 ENABLE_LLM_ENRICHMENT = os.getenv("ENABLE_LLM_ENRICHMENT", "false").lower() == "true"
 LLM_ENRICH_MAX_COMPONENTS = int(os.getenv("LLM_ENRICH_MAX_COMPONENTS", "1"))
@@ -232,6 +234,70 @@ def _normalize_prediction(pred: dict[str, Any]) -> dict[str, Any] | None:
         "candidates": _mock_candidates_for_type(component_type),
     }
 
+# HELPER FUNCTIONS FOR Detect Components BGR
+def _bbox_iou_xywh(a: list[int], b: list[int]) -> float:
+    ax, ay, aw, ah = a
+    bx, by, bw, bh = b
+
+    ax2 = ax + aw
+    ay2 = ay + ah
+    bx2 = bx + bw
+    by2 = by + bh
+
+    inter_x1 = max(ax, bx)
+    inter_y1 = max(ay, by)
+    inter_x2 = min(ax2, bx2)
+    inter_y2 = min(ay2, by2)
+
+    inter_w = max(0, inter_x2 - inter_x1)
+    inter_h = max(0, inter_y2 - inter_y1)
+    inter_area = inter_w * inter_h
+
+    if inter_area <= 0:
+        return 0.0
+
+    area_a = aw * ah
+    area_b = bw * bh
+    union = area_a + area_b - inter_area
+
+    if union <= 0:
+        return 0.0
+
+    return inter_area / union
+
+
+def _dedup_overlapping_components(
+    components: list[dict[str, Any]],
+    iou_threshold: float = 0.5,
+) -> list[dict[str, Any]]:
+    """
+    Keep only the highest-confidence component among overlapping boxes.
+
+    Assumes components are already sorted by confidence descending.
+    """
+    kept: list[dict[str, Any]] = []
+
+    for candidate in components:
+        candidate_bbox = candidate.get("bbox")
+        if not candidate_bbox or len(candidate_bbox) != 4:
+            continue
+
+        overlaps_existing = False
+
+        for existing in kept:
+            existing_bbox = existing.get("bbox")
+            if not existing_bbox or len(existing_bbox) != 4:
+                continue
+
+            iou = _bbox_iou_xywh(candidate_bbox, existing_bbox)
+            if iou >= iou_threshold:
+                overlaps_existing = True
+                break
+
+        if not overlaps_existing:
+            kept.append(candidate)
+
+    return kept
 
 def detect_components_bgr(image_bgr: np.ndarray) -> dict[str, Any]:
     if not ROBOFLOW_API_KEY:
@@ -241,7 +307,7 @@ def detect_components_bgr(image_bgr: np.ndarray) -> dict[str, Any]:
 
     url = f"{ROBOFLOW_BASE_URL}/{ROBOFLOW_MODEL_ID}"
 
-    response = requests.post(
+    response = SESSION.post(
         url,
         params={"api_key": ROBOFLOW_API_KEY},
         files={"file": ("frame.jpg", image_bytes, "image/jpeg")},
@@ -260,6 +326,7 @@ def detect_components_bgr(image_bgr: np.ndarray) -> dict[str, Any]:
             components.append(normalized)
 
     components.sort(key=lambda c: float(c.get("confidence", 0.0)), reverse=True)
+    components = _dedup_overlapping_components(components, iou_threshold=0.5)
 
     enriched_count = 0
 

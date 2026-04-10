@@ -120,8 +120,8 @@ async def analyze_image(file: UploadFile = File(...)):
     t0 = time.time()
     contents = await file.read()
 
-    with open("debug_last_upload.jpg", "wb") as f:
-        f.write(contents)
+    # with open("debug_last_upload.jpg", "wb") as f:
+    #     f.write(contents)
 
     h = hashlib.sha256(contents).hexdigest()[:12] if contents else "emptyupload"
     n = len(contents)
@@ -266,6 +266,10 @@ async def analyze_debug(file: UploadFile = File(...)):
     ok, encoded = cv2.imencode(".jpg", annotated)
     if not ok:
         return JSONResponse(status_code=500, content={"error": "Failed to encode image"})
+
+    # Save annotated image
+    with open("debug.jpg", "wb") as f:
+        f.write(encoded.tobytes())
 
     return Response(
         content=encoded.tobytes(),

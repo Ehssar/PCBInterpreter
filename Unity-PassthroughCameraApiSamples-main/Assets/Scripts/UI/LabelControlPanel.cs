@@ -48,7 +48,7 @@ public class LabelControlPanel : MonoBehaviour
         }
 
         SetPanelVisible(panelVisible);
-        ShowCategoryPanel();
+        ShowControlsPanel();
     }
 
     private void Update()
@@ -246,5 +246,10 @@ public class LabelControlPanel : MonoBehaviour
     public void FilterLED()
     {
         labelSpawner?.SetFilter(LabelFilterCategory.LED);
+    }
+
+    public void FilterUnknown()
+    {
+        labelSpawner?.SetFilter(LabelFilterCategory.Unknown);
     }
 }
