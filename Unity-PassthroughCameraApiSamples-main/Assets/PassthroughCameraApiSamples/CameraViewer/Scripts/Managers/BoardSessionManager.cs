@@ -22,7 +22,7 @@ public class BoardSessionManager : MonoBehaviour
         HideAllLabels();
     }
 
-    public void CreateSession(AnalyzeResponse response)
+    public void CreateSession(AnalyzeResponse response, byte[] jpg)
     {
         if (response == null)
         {
@@ -40,6 +40,7 @@ public class BoardSessionManager : MonoBehaviour
             analyzedAtUnixMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
             imageWidth = response.image_width,
             imageHeight = response.image_height,
+            capturedImageJpg = jpg,
             labelsVisible = false,
             visibilityMode = string.IsNullOrEmpty(response.label_visibility_default)
                 ? "hidden"

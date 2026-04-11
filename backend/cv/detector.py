@@ -47,6 +47,58 @@ LABEL_MAP = {
     "jumper": "unknown",
 }
 
+from pathlib import Path
+from datetime import datetime
+
+DEBUG_SAVE_DETECTIONS = os.getenv("DEBUG_SAVE_DETECTIONS", "true").lower() == "true"
+# parent directory of detector.py
+BASE_DIR = Path(__file__).resolve().parent.parent
+DEBUG_IMAGE_PATH = BASE_DIR / "debug.jpg"
+
+
+def _save_detection_debug_image(
+    image_bgr: np.ndarray,
+    components: list[dict[str, Any]]
+) -> None:
+    if not DEBUG_SAVE_DETECTIONS:
+        return None
+
+    debug_img = image_bgr.copy()
+
+    for component in components:
+        bbox = component.get("bbox")
+        if not bbox or len(bbox) != 4:
+            continue
+
+        x, y, w, h = bbox
+        x0 = max(0, x)
+        y0 = max(0, y)
+        x1 = min(debug_img.shape[1], x + w)
+        y1 = min(debug_img.shape[0], y + h)
+
+        label = component.get("type", "unknown")
+        raw_label = component.get("source_label", "")
+        conf = float(component.get("confidence", 0.0))
+
+        # Blue box in BGR
+        cv2.rectangle(debug_img, (x0, y0), (x1, y1), (255, 0, 0), 2)
+
+        text = f"{raw_label}->{label} {conf:.2f}" if raw_label else f"{label} {conf:.2f}"
+        text_y = max(20, y0 - 8)
+
+        cv2.putText(
+            debug_img,
+            text,
+            (x0, text_y),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.5,
+            (255, 0, 0),  # blue in BGR
+            1,
+            cv2.LINE_AA,
+        )
+
+    cv2.imwrite(str(DEBUG_IMAGE_PATH), debug_img)
+    print(f"[detector debug] saved {DEBUG_IMAGE_PATH}")
 
 def _bgr_to_jpeg_bytes(image_bgr: np.ndarray) -> bytes:
     ok, encoded = cv2.imencode(".jpg", image_bgr)
@@ -144,7 +196,7 @@ def _make_enrichment(component_type: str, raw_label: str) -> dict[str, Any]:
     return {
         "display_name": display_name,
         "one_line_label": f"Likely {component_type}",
-        "function_summary": f"Detected {component_type}. Detailed function inference not yet available.",
+        "function_summary": f"Detected {component_type}. Additional functional detail unavailable for this pass.",
         "confidence_note": "Preliminary CV-only result.",
         "ocr_text": None,
         "datasheet_url": None,
@@ -327,6 +379,10 @@ def detect_components_bgr(image_bgr: np.ndarray) -> dict[str, Any]:
 
     components.sort(key=lambda c: float(c.get("confidence", 0.0)), reverse=True)
     components = _dedup_overlapping_components(components, iou_threshold=0.5)
+
+    debug_image_path = _save_detection_debug_image(image_bgr, components)
+    if debug_image_path:
+        print(f"[detector debug] saved {debug_image_path}")
 
     enriched_count = 0
 

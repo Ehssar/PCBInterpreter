@@ -9,6 +9,8 @@ public class BoardSession
     public string mode;
     public long analyzedAtUnixMs;
 
+    public byte[] capturedImageJpg;
+
     public int imageWidth;
     public int imageHeight;
 

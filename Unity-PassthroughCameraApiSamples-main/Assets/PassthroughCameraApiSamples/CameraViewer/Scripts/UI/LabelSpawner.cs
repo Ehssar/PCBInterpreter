@@ -21,19 +21,25 @@ public class LabelSpawner : MonoBehaviour
     [SerializeField] private Transform labelParent;
     [SerializeField] private Camera targetCamera;
 
-    [Header("UI Set Label Prefab")]
+    [Header("Prefabs")]
     [SerializeField] private ComponentLabelCard labelCardPrefab;
+    [SerializeField] private BoardOverlayCard boardOverlayCardPrefab;
 
     [Header("Placement")]
     [SerializeField] private float zOffset = 0.45f;
-    //[SerializeField] private float yOffset = -0.05f;
-    //[SerializeField] private float viewportYOffset = -0.08f;
+    [SerializeField] private Vector3 boardOverlayLocalOffset = new Vector3(0f, -0.02f, 0.55f);
+    [SerializeField] private Vector3 boardOverlayEulerOffset = Vector3.zero;
 
     [Header("Runtime")]
     [SerializeField] private bool updateAnchorsEveryFrame = false;
     [SerializeField] private bool forceVisibleForDebug = false;
+    [SerializeField] private bool showAllBoxesByDefault = false;
 
     private readonly Dictionary<string, ComponentLabelCard> spawnedLabels = new();
+
+    private GameObject currentSessionRoot;
+    private BoardOverlayCard currentBoardOverlayCard;
+
     private bool detailsMode = false;
     private LabelFilterCategory activeFilter = LabelFilterCategory.All;
 
@@ -98,14 +104,73 @@ public class LabelSpawner : MonoBehaviour
     private void HandleSessionCreated(BoardSession session)
     {
         Debug.Log($"[LabelSpawner] Session created. Components: {session?.components?.Count ?? 0}");
-        ClearSpawnedLabels();
+
+        ClearCurrentSessionVisuals();
 
         if (session == null || session.components == null || labelCardPrefab == null)
             return;
 
+        CreateSessionRoot();
+        SpawnBoardOverlayForSession(session);
         SpawnLabelsForSession(session);
+
         Debug.Log($"[LabelSpawner] Spawned labels: {spawnedLabels.Count}");
         RefreshVisibility();
+    }
+
+    private void CreateSessionRoot()
+    {
+        currentSessionRoot = new GameObject("SpawnedBoardSessionRoot");
+        currentSessionRoot.transform.SetParent(labelParent, worldPositionStays: false);
+        currentSessionRoot.transform.localPosition = Vector3.zero;
+        currentSessionRoot.transform.localRotation = Quaternion.identity;
+        currentSessionRoot.transform.localScale = Vector3.one;
+    }
+
+    private void SpawnBoardOverlayForSession(BoardSession session)
+    {
+        if (boardOverlayCardPrefab == null || currentSessionRoot == null)
+            return;
+
+        Vector3 worldPos = GetBoardOverlayWorldPosition();
+        Quaternion worldRot = GetBoardOverlayWorldRotation();
+
+        currentBoardOverlayCard = Instantiate(
+            boardOverlayCardPrefab,
+            worldPos,
+            worldRot,
+            currentSessionRoot.transform
+        );
+
+        currentBoardOverlayCard.name = "BoardOverlayCard";
+
+        Texture2D boardTexture = BuildTextureFromSession(session);
+        if (boardTexture != null)
+            currentBoardOverlayCard.SetBoardTexture(boardTexture);
+
+        float imageWidth = session != null && session.imageWidth > 0 ? session.imageWidth : 1f;
+        float imageHeight = session != null && session.imageHeight > 0 ? session.imageHeight : 1f;
+
+        StartCoroutine(BuildBoardBoxesNextFrame(session, imageWidth, imageHeight));
+    }
+
+    private System.Collections.IEnumerator BuildBoardBoxesNextFrame(
+        BoardSession session,
+        float imageWidth,
+        float imageHeight
+    )
+    {
+        yield return null;
+
+        if (currentBoardOverlayCard == null || session == null || session.components == null)
+            yield break;
+
+        currentBoardOverlayCard.BuildBoxes(session.components, imageWidth, imageHeight);
+
+        if (showAllBoxesByDefault)
+            currentBoardOverlayCard.ShowAllBoxes(true);
+        else
+            currentBoardOverlayCard.ClearHighlight();
     }
 
     private void SpawnLabelsForSession(BoardSession session)
@@ -127,11 +192,13 @@ public class LabelSpawner : MonoBehaviour
 
         Debug.Log($"[LabelSpawner] Creating {component.component_id} at {anchorPosition}");
 
+        Transform parent = currentSessionRoot != null ? currentSessionRoot.transform : labelParent;
+
         ComponentLabelCard card = Instantiate(
             labelCardPrefab,
             anchorPosition,
             Quaternion.identity,
-            labelParent
+            parent
         );
 
         card.name = $"Label_{component.component_id}";
@@ -150,16 +217,19 @@ public class LabelSpawner : MonoBehaviour
     {
         if (boardSessionManager == null || !boardSessionManager.HasSession)
         {
-            SetAllLabelsActive(false);
+            SetCurrentSessionVisible(false);
             return;
         }
 
         BoardSession session = boardSessionManager.CurrentSession;
         if (session == null || session.components == null)
         {
-            SetAllLabelsActive(false);
+            SetCurrentSessionVisible(false);
             return;
         }
+
+        bool sessionVisible = session.labelsVisible || forceVisibleForDebug;
+        SetCurrentSessionVisible(sessionVisible);
 
         foreach (var component in session.components)
         {
@@ -170,7 +240,7 @@ public class LabelSpawner : MonoBehaviour
                 continue;
 
             bool hasEnrichment = component.enrichment != null;
-            bool visible = session.labelsVisible && component.IsLabelVisible();
+            bool visible = sessionVisible && component.IsLabelVisible();
 
             if (detailsMode && !hasEnrichment)
                 visible = false;
@@ -191,6 +261,9 @@ public class LabelSpawner : MonoBehaviour
             if (targetCamera != null)
                 card.SetCameraTarget(targetCamera.transform);
         }
+
+        if (!sessionVisible && currentBoardOverlayCard != null)
+            currentBoardOverlayCard.ClearHighlight();
     }
 
     private bool MatchesFilter(ComponentResult component)
@@ -214,25 +287,18 @@ public class LabelSpawner : MonoBehaviour
         {
             case "resistor":
                 return LabelFilterCategory.Resistor;
-
             case "capacitor":
                 return LabelFilterCategory.Capacitor;
-
             case "ic":
                 return LabelFilterCategory.IC;
-
             case "diode":
                 return LabelFilterCategory.Diode;
-
             case "transistor":
                 return LabelFilterCategory.Transistor;
-
             case "inductor":
                 return LabelFilterCategory.Inductor;
-
             case "led":
                 return LabelFilterCategory.LED;
-
             default:
                 return LabelFilterCategory.Unknown;
         }
@@ -265,15 +331,11 @@ public class LabelSpawner : MonoBehaviour
         if (targetCamera == null || component == null || component.bbox == null || component.bbox.Length < 4)
             return transform.position;
 
-        // Backend bbox format: [left, top, width, height]
         float left = component.bbox[0];
         float top = component.bbox[1];
         float width = component.bbox[2];
         float height = component.bbox[3];
 
-        // Use the bbox center horizontally.
-        // Vertically, bias slightly below center so the card feels connected to the part
-        // without sitting too high in the user's view.
         float anchorX = left + (width * 0.5f);
         float anchorY = top + (height * 0.70f);
 
@@ -295,43 +357,28 @@ public class LabelSpawner : MonoBehaviour
         if (sourceHeight <= 0f)
             sourceHeight = Mathf.Max(1f, targetCamera.pixelHeight);
 
-        // Normalize into image/viewport space.
         float normalizedX = Mathf.Clamp01(anchorX / sourceWidth);
         float normalizedY = Mathf.Clamp01(1f - (anchorY / sourceHeight));
 
-        // Re-center into [-1, 1] so we can shape the layout more deliberately.
         float centeredX = (normalizedX - 0.5f) * 2f;
         float centeredY = (normalizedY - 0.5f) * 2f;
 
-        // Preserve PCB shape, but compress extremes so labels do not get pushed too far
-        // toward the top/bottom edges of the user's FOV.
-        // Smaller values = more compression near edges.
         float horizontalShapeStrength = 0.85f;
         float verticalShapeStrength = 0.65f;
 
         float shapedX = centeredX * horizontalShapeStrength;
         float shapedY = centeredY * verticalShapeStrength;
 
-        // Global downward bias so labels sit a bit lower and more comfortably.
-        // Negative value moves them lower in view.
         shapedY -= 0.18f;
 
-        // Convert back into viewport coordinates.
         float finalViewportX = Mathf.Clamp01(0.5f + (shapedX * 0.5f));
         float finalViewportY = Mathf.Clamp01(0.5f + (shapedY * 0.5f));
 
-        // Project a ray from the adjusted viewport point.
         Ray ray = targetCamera.ViewportPointToRay(new Vector3(finalViewportX, finalViewportY, 0f));
 
-        // Place cards in a comfortable band in front of the user.
-        // Since this is FOV-projected rather than board-anchored, this depth is the main
-        // "interaction zone" where labels live before the user drags them.
         float distanceFromCamera = zOffset;
-
         Vector3 worldPoint = ray.origin + ray.direction * distanceFromCamera;
 
-        // Small world-space bias to keep labels slightly below eye line and a touch forward.
-        // This helps readability without destroying the rough board shape.
         Vector3 cameraUp = targetCamera.transform.up;
         Vector3 cameraForward = targetCamera.transform.forward;
 
@@ -351,16 +398,54 @@ public class LabelSpawner : MonoBehaviour
         return worldPoint;
     }
 
-    private void SetAllLabelsActive(bool active)
+    private Vector3 GetBoardOverlayWorldPosition()
     {
-        foreach (var kvp in spawnedLabels)
-        {
-            if (kvp.Value != null)
-                kvp.Value.SetVisible(active);
-        }
+        if (targetCamera == null)
+            return transform.position;
+
+        Transform cam = targetCamera.transform;
+
+        return cam.position
+             + cam.forward * boardOverlayLocalOffset.z
+             + cam.right * boardOverlayLocalOffset.x
+             + cam.up * boardOverlayLocalOffset.y;
     }
 
-    private void ClearSpawnedLabels()
+    private Quaternion GetBoardOverlayWorldRotation()
+    {
+        if (targetCamera == null)
+            return Quaternion.identity;
+
+        Quaternion lookRot = Quaternion.LookRotation(targetCamera.transform.forward, targetCamera.transform.up);
+        return lookRot * Quaternion.Euler(boardOverlayEulerOffset);
+    }
+
+    private Texture2D BuildTextureFromSession(BoardSession session)
+    {
+        if (session == null || session.capturedImageJpg == null || session.capturedImageJpg.Length == 0)
+            return null;
+
+        Texture2D texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+        bool loaded = texture.LoadImage(session.capturedImageJpg, markNonReadable: false);
+
+        if (!loaded)
+        {
+            Debug.LogWarning("[LabelSpawner] Failed to load board image texture from session JPG bytes.");
+            Destroy(texture);
+            return null;
+        }
+
+        texture.name = "BoardCaptureTexture";
+        return texture;
+    }
+
+    private void SetCurrentSessionVisible(bool visible)
+    {
+        if (currentSessionRoot != null)
+            currentSessionRoot.SetActive(visible);
+    }
+
+    private void ClearCurrentSessionVisuals()
     {
         foreach (var kvp in spawnedLabels)
         {
@@ -369,5 +454,11 @@ public class LabelSpawner : MonoBehaviour
         }
 
         spawnedLabels.Clear();
+        currentBoardOverlayCard = null;
+
+        if (currentSessionRoot != null)
+            Destroy(currentSessionRoot);
+
+        currentSessionRoot = null;
     }
 }

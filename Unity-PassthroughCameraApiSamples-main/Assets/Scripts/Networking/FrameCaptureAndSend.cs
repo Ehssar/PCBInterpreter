@@ -168,9 +168,13 @@ public class FrameCaptureAndSend : MonoBehaviour
             }
             else
             {
+                // Frontend is the source of truth for the captured image dimensions
+                resp.image_width = tex.width;
+                resp.image_height = tex.height;
+                
                 if (boardSessionManager != null)
                 {
-                    boardSessionManager.CreateSession(resp);
+                    boardSessionManager.CreateSession(resp, jpg);
                     overlay?.SetStatusTimed("Labels shown", 2.0f);
                     // temporary visual test
                     boardSessionManager.ShowAllLabels();
