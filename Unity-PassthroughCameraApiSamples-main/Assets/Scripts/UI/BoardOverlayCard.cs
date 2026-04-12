@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using Oculus.Interaction;
 
 public class BoardOverlayCard : MonoBehaviour
 {
@@ -21,16 +22,45 @@ public class BoardOverlayCard : MonoBehaviour
     [SerializeField] private bool snapFacingOnStart = true;
 
     [Header("Grab")]
-    [SerializeField] private Oculus.Interaction.GrabInteractable grabInteractable;
+    [SerializeField] private GrabInteractable grabInteractable;
 
     [Header("BBox Visuals")]
-    [SerializeField] private Color bboxColor = Color.blue;
+    [SerializeField] private Color defaultBoxColor = Color.red;
+    [SerializeField] private Color hoveredBoxColor = Color.yellow;
+    [SerializeField] private Color selectedBoxColor = new Color(1f, 0.55f, 0f, 1f);
+    [SerializeField] private float edgeThickness = 2f;
 
-    private readonly Dictionary<string, RectTransform> boxesById = new();
+    private readonly Dictionary<string, BBoxVisual> boxesById = new();
 
     private bool isGrabbed = false;
     private bool shouldSmoothRotateToUser = false;
     private bool wasGrabbedLastFrame = false;
+
+    private string hoveredComponentId;
+    private string selectedComponentId;
+
+    private sealed class BBoxVisual
+    {
+        public RectTransform root;
+        public Image top;
+        public Image bottom;
+        public Image left;
+        public Image right;
+
+        public void SetColor(Color color)
+        {
+            if (top != null) top.color = color;
+            if (bottom != null) bottom.color = color;
+            if (left != null) left.color = color;
+            if (right != null) right.color = color;
+        }
+
+        public void SetVisible(bool visible)
+        {
+            if (root != null)
+                root.gameObject.SetActive(visible);
+        }
+    }
 
     private IEnumerator Start()
     {
@@ -39,7 +69,6 @@ public class BoardOverlayCard : MonoBehaviour
         if (headTransform == null && Camera.main != null)
             headTransform = Camera.main.transform;
 
-        // Flip image + overlay together so boxes still align
         if (boardImage != null)
         {
             Vector3 s = boardImage.rectTransform.localScale;
@@ -91,7 +120,7 @@ public class BoardOverlayCard : MonoBehaviour
             return;
 
         bool isCurrentlyGrabbed =
-            grabInteractable.State == Oculus.Interaction.InteractableState.Select;
+            grabInteractable.State == InteractableState.Select;
 
         if (isCurrentlyGrabbed && !wasGrabbedLastFrame)
         {
@@ -168,10 +197,11 @@ public class BoardOverlayCard : MonoBehaviour
             Destroy(child.gameObject);
 
         boxesById.Clear();
+        hoveredComponentId = null;
+        selectedComponentId = null;
     }
 
-    // Helper to create the 4 edges of the bounding box since Unity UI doesn't have a built in way to do this with just a RectTransform
-    private void CreateEdge(string name, RectTransform parent, Vector2 anchor, Vector2 size)
+    private Image CreateEdge(string name, RectTransform parent, Vector2 anchor, Vector2 size)
     {
         GameObject edge = new GameObject(name, typeof(RectTransform), typeof(Image));
         edge.transform.SetParent(parent, false);
@@ -179,13 +209,15 @@ public class BoardOverlayCard : MonoBehaviour
         RectTransform rt = edge.GetComponent<RectTransform>();
         Image img = edge.GetComponent<Image>();
 
-        img.color = Color.red;
+        img.color = defaultBoxColor;
 
         rt.anchorMin = anchor;
         rt.anchorMax = anchor;
         rt.pivot = new Vector2(0.5f, 0.5f);
         rt.sizeDelta = size;
         rt.anchoredPosition = Vector2.zero;
+
+        return img;
     }
 
     public void BuildBoxes(
@@ -199,12 +231,6 @@ public class BoardOverlayCard : MonoBehaviour
         if (boxOverlayContainer == null)
         {
             Debug.LogError("BuildBoxes aborted: boxOverlayContainer is NULL");
-            return;
-        }
-
-        if (bboxOverlayPrefab == null)
-        {
-            Debug.LogError("BuildBoxes aborted: bboxOverlayPrefab is NULL");
             return;
         }
 
@@ -250,29 +276,94 @@ public class BoardOverlayCard : MonoBehaviour
             rt.anchoredPosition = new Vector2(uiX, uiY);
             rt.sizeDelta = new Vector2(uiW, uiH);
 
-            CreateEdge("Top", rt, new Vector2(0.5f, 1f), new Vector2(uiW, 2f));
-            CreateEdge("Bottom", rt, new Vector2(0.5f, 0f), new Vector2(uiW, 2f));
-            CreateEdge("Left", rt, new Vector2(0f, 0.5f), new Vector2(2f, uiH));
-            CreateEdge("Right", rt, new Vector2(1f, 0.5f), new Vector2(2f, uiH));
+            BBoxVisual visual = new BBoxVisual
+            {
+                root = rt,
+                top = CreateEdge("Top", rt, new Vector2(0.5f, 1f), new Vector2(uiW, edgeThickness)),
+                bottom = CreateEdge("Bottom", rt, new Vector2(0.5f, 0f), new Vector2(uiW, edgeThickness)),
+                left = CreateEdge("Left", rt, new Vector2(0f, 0.5f), new Vector2(edgeThickness, uiH)),
+                right = CreateEdge("Right", rt, new Vector2(1f, 0.5f), new Vector2(edgeThickness, uiH)),
+            };
 
-            go.SetActive(true);
-            boxesById[component.component_id] = rt;
+            visual.SetColor(defaultBoxColor);
+            visual.SetVisible(true);
+
+            boxesById[component.component_id] = visual;
+        }
+
+        RefreshAllBoxColors();
+    }
+
+    public void SetHoveredComponent(string componentId)
+    {
+        hoveredComponentId = string.IsNullOrWhiteSpace(componentId) ? null : componentId;
+        RefreshAllBoxColors();
+    }
+
+    public void ClearHoveredComponent(string componentId)
+    {
+        if (hoveredComponentId == componentId)
+        {
+            hoveredComponentId = null;
+            RefreshAllBoxColors();
+        }
+    }
+
+    public void SetSelectedComponent(string componentId)
+    {
+        selectedComponentId = string.IsNullOrWhiteSpace(componentId) ? null : componentId;
+        RefreshAllBoxColors();
+    }
+
+    public void ClearSelectedComponent(string componentId)
+    {
+        if (selectedComponentId == componentId)
+        {
+            selectedComponentId = null;
+            RefreshAllBoxColors();
+        }
+    }
+
+    private void RefreshAllBoxColors()
+    {
+        foreach (var kvp in boxesById)
+        {
+            string id = kvp.Key;
+            BBoxVisual visual = kvp.Value;
+
+            if (visual == null)
+                continue;
+
+            if (id == selectedComponentId)
+            {
+                visual.SetColor(selectedBoxColor);
+            }
+            else if (id == hoveredComponentId)
+            {
+                visual.SetColor(hoveredBoxColor);
+            }
+            else
+            {
+                visual.SetColor(defaultBoxColor);
+            }
         }
     }
 
     public void HighlightOnly(string componentId)
     {
-        foreach (var kvp in boxesById)
-            kvp.Value.gameObject.SetActive(kvp.Key == componentId);
+        SetSelectedComponent(componentId);
     }
 
     public void ShowAllBoxes(bool show)
     {
         foreach (var kvp in boxesById)
-            kvp.Value.gameObject.SetActive(show);
+            kvp.Value?.SetVisible(show);
     }
 
     public void ClearHighlight()
     {
+        hoveredComponentId = null;
+        selectedComponentId = null;
+        RefreshAllBoxColors();
     }
 }

@@ -1,3 +1,4 @@
+using System;
 using TMPro;
 using UnityEngine;
 using Oculus.Interaction;
@@ -25,7 +26,7 @@ public class ComponentLabelCard : MonoBehaviour
     [SerializeField] private float faceUserSmoothSpeed = 10f;
 
     [Header("Grab")]
-    [SerializeField] private Oculus.Interaction.GrabInteractable grabInteractable;
+    [SerializeField] private GrabInteractable grabInteractable;
 
     private string componentId;
     private Vector3 anchorWorldPosition;
@@ -38,8 +39,19 @@ public class ComponentLabelCard : MonoBehaviour
     private bool shouldSmoothRotateToUser = false;
     private bool wasGrabbedLastFrame = false;
 
+    // Hover state
+    private bool isHovered = false;
+    private bool wasHoveredLastFrame = false;
+
     public string ComponentId => componentId;
     public bool HasUserMoved => hasUserMoved;
+    public bool IsGrabbed => isGrabbed;
+    public bool IsHovered => isHovered;
+
+    public event Action<string> HoverStarted;
+    public event Action<string> HoverEnded;
+    public event Action<string> SelectedStarted;
+    public event Action<string> SelectedEnded;
 
     private void Awake()
     {
@@ -77,15 +89,13 @@ public class ComponentLabelCard : MonoBehaviour
 
         RefreshText(component, detailsMode);
         RefreshPosition();
+
         if (visualRoot != null)
-        {
             visualRoot.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
-        }
 
         if (visualRoot != null)
             visualRoot.SetActive(true);
 
-        // Debug.Log($"[ComponentLabelCard] Initialize on {name}");
         initialized = true;
         SnapFacingUser();
     }
@@ -145,7 +155,7 @@ public class ComponentLabelCard : MonoBehaviour
     private void Update()
     {
         if (!initialized) return;
-        UpdateGrabState();
+        UpdateInteractionState();
     }
 
     private void LateUpdate()
@@ -176,12 +186,12 @@ public class ComponentLabelCard : MonoBehaviour
 
     private InteractableState? lastLoggedState = null;
 
-    private void UpdateGrabState()
+    private void UpdateInteractionState()
     {
         if (grabInteractable == null)
             return;
 
-        var currentState = grabInteractable.State;
+        InteractableState currentState = grabInteractable.State;
 
         if (lastLoggedState == null || currentState != lastLoggedState.Value)
         {
@@ -190,6 +200,16 @@ public class ComponentLabelCard : MonoBehaviour
         }
 
         bool isCurrentlyGrabbed = currentState == InteractableState.Select;
+        bool isCurrentlyHovered = currentState == InteractableState.Hover;
+
+        if (isCurrentlyHovered && !wasHoveredLastFrame)
+        {
+            BeginHover();
+        }
+        else if (!isCurrentlyHovered && wasHoveredLastFrame)
+        {
+            EndHover();
+        }
 
         if (isCurrentlyGrabbed && !wasGrabbedLastFrame)
         {
@@ -200,7 +220,24 @@ public class ComponentLabelCard : MonoBehaviour
             EndGrab();
         }
 
+        wasHoveredLastFrame = isCurrentlyHovered;
         wasGrabbedLastFrame = isCurrentlyGrabbed;
+    }
+
+    public void BeginHover()
+    {
+        isHovered = true;
+
+        if (!string.IsNullOrWhiteSpace(componentId))
+            HoverStarted?.Invoke(componentId);
+    }
+
+    public void EndHover()
+    {
+        isHovered = false;
+
+        if (!string.IsNullOrWhiteSpace(componentId))
+            HoverEnded?.Invoke(componentId);
     }
 
     public void BeginGrab()
@@ -208,12 +245,18 @@ public class ComponentLabelCard : MonoBehaviour
         Debug.Log($"[ComponentLabelCard] BeginGrab {name}");
         isGrabbed = true;
         shouldSmoothRotateToUser = false;
+
+        if (!string.IsNullOrWhiteSpace(componentId))
+            SelectedStarted?.Invoke(componentId);
     }
 
     public void EndGrab()
     {
         Debug.Log($"[ComponentLabelCard] EndGrab {name}");
         isGrabbed = false;
+
+        if (!string.IsNullOrWhiteSpace(componentId))
+            SelectedEnded?.Invoke(componentId);
 
         if (!faceCamera || !faceUserOnRelease)
             return;

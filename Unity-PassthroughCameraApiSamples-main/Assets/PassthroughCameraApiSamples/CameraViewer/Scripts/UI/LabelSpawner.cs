@@ -43,6 +43,9 @@ public class LabelSpawner : MonoBehaviour
     private bool detailsMode = false;
     private LabelFilterCategory activeFilter = LabelFilterCategory.All;
 
+    private string hoveredComponentId;
+    private string selectedComponentId;
+
     private void Awake()
     {
         if (labelParent == null)
@@ -116,6 +119,7 @@ public class LabelSpawner : MonoBehaviour
 
         Debug.Log($"[LabelSpawner] Spawned labels: {spawnedLabels.Count}");
         RefreshVisibility();
+        RefreshOverlayInteractionState();
     }
 
     private void CreateSessionRoot()
@@ -170,7 +174,9 @@ public class LabelSpawner : MonoBehaviour
         if (showAllBoxesByDefault)
             currentBoardOverlayCard.ShowAllBoxes(true);
         else
-            currentBoardOverlayCard.ClearHighlight();
+            currentBoardOverlayCard.ShowAllBoxes(true);
+
+        RefreshOverlayInteractionState();
     }
 
     private void SpawnLabelsForSession(BoardSession session)
@@ -182,7 +188,10 @@ public class LabelSpawner : MonoBehaviour
 
             ComponentLabelCard card = CreateLabelCard(component, session);
             if (card != null)
+            {
                 spawnedLabels[component.component_id] = card;
+                RegisterCardEvents(card);
+            }
         }
     }
 
@@ -213,6 +222,65 @@ public class LabelSpawner : MonoBehaviour
         return card;
     }
 
+    private void RegisterCardEvents(ComponentLabelCard card)
+    {
+        if (card == null)
+            return;
+
+        card.HoverStarted += HandleCardHoverStarted;
+        card.HoverEnded += HandleCardHoverEnded;
+        card.SelectedStarted += HandleCardSelectedStarted;
+        card.SelectedEnded += HandleCardSelectedEnded;
+    }
+
+    private void UnregisterCardEvents(ComponentLabelCard card)
+    {
+        if (card == null)
+            return;
+
+        card.HoverStarted -= HandleCardHoverStarted;
+        card.HoverEnded -= HandleCardHoverEnded;
+        card.SelectedStarted -= HandleCardSelectedStarted;
+        card.SelectedEnded -= HandleCardSelectedEnded;
+    }
+
+    private void HandleCardHoverStarted(string componentId)
+    {
+        hoveredComponentId = componentId;
+        RefreshOverlayInteractionState();
+    }
+
+    private void HandleCardHoverEnded(string componentId)
+    {
+        if (hoveredComponentId == componentId)
+            hoveredComponentId = null;
+
+        RefreshOverlayInteractionState();
+    }
+
+    private void HandleCardSelectedStarted(string componentId)
+    {
+        selectedComponentId = componentId;
+        RefreshOverlayInteractionState();
+    }
+
+    private void HandleCardSelectedEnded(string componentId)
+    {
+        if (selectedComponentId == componentId)
+            selectedComponentId = null;
+
+        RefreshOverlayInteractionState();
+    }
+
+    private void RefreshOverlayInteractionState()
+    {
+        if (currentBoardOverlayCard == null)
+            return;
+
+        currentBoardOverlayCard.SetHoveredComponent(hoveredComponentId);
+        currentBoardOverlayCard.SetSelectedComponent(selectedComponentId);
+    }
+
     private void RefreshVisibility()
     {
         if (boardSessionManager == null || !boardSessionManager.HasSession)
@@ -230,6 +298,8 @@ public class LabelSpawner : MonoBehaviour
 
         bool sessionVisible = session.labelsVisible || forceVisibleForDebug;
         SetCurrentSessionVisible(sessionVisible);
+
+        HashSet<string> visibleIds = new HashSet<string>();
 
         foreach (var component in session.components)
         {
@@ -256,14 +326,33 @@ public class LabelSpawner : MonoBehaviour
             if (!visible)
                 continue;
 
+            visibleIds.Add(component.component_id);
+
             card.RefreshText(component, detailsMode);
 
             if (targetCamera != null)
                 card.SetCameraTarget(targetCamera.transform);
         }
 
-        if (!sessionVisible && currentBoardOverlayCard != null)
-            currentBoardOverlayCard.ClearHighlight();
+        if (currentBoardOverlayCard != null)
+        {
+            currentBoardOverlayCard.ShowAllBoxes(sessionVisible || forceVisibleForDebug);
+
+            if (!sessionVisible && !forceVisibleForDebug)
+            {
+                currentBoardOverlayCard.ClearHighlight();
+            }
+            else
+            {
+                if (!string.IsNullOrWhiteSpace(hoveredComponentId) && !visibleIds.Contains(hoveredComponentId))
+                    hoveredComponentId = null;
+
+                if (!string.IsNullOrWhiteSpace(selectedComponentId) && !visibleIds.Contains(selectedComponentId))
+                    selectedComponentId = null;
+
+                RefreshOverlayInteractionState();
+            }
+        }
     }
 
     private bool MatchesFilter(ComponentResult component)
@@ -450,10 +539,17 @@ public class LabelSpawner : MonoBehaviour
         foreach (var kvp in spawnedLabels)
         {
             if (kvp.Value != null)
+            {
+                UnregisterCardEvents(kvp.Value);
                 Destroy(kvp.Value.gameObject);
+            }
         }
 
         spawnedLabels.Clear();
+
+        hoveredComponentId = null;
+        selectedComponentId = null;
+
         currentBoardOverlayCard = null;
 
         if (currentSessionRoot != null)
