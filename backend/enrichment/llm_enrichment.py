@@ -55,6 +55,7 @@ def _normalize_enrichment_payload(payload: dict[str, Any]) -> dict[str, Any]:
     attributes = payload.get("attributes") or {}
 
     return {
+        "resolved_type": payload.get("resolved_type"),
         "display_name": payload.get("display_name"),
         "one_line_label": payload.get("one_line_label"),
         "function_summary": payload.get("function_summary"),
@@ -84,6 +85,7 @@ ENRICHMENT_SCHEMA: dict[str, Any] = {
     "type": "object",
     "additionalProperties": False,
     "required": [
+        "resolved_type",
         "display_name",
         "one_line_label",
         "function_summary",
@@ -95,6 +97,7 @@ ENRICHMENT_SCHEMA: dict[str, Any] = {
         "attributes",
     ],
     "properties": {
+        "resolved_type": {"type": ["string", "null"]},
         "display_name": {"type": ["string", "null"]},
         "one_line_label": {"type": ["string", "null"]},
         "function_summary": {"type": ["string", "null"]},
@@ -175,13 +178,27 @@ def enrich_component(
     developer_prompt = (
         "You enrich PCB component detections for an AR assistant.\n"
         "Use the detector's type and source_label as a strong prior, but do not invent exact part numbers.\n"
+        "Your output will appear on small floating labels, so be concise, practical, and conservative.\n"
         "Primary evidence: tight component crop.\n"
         "Secondary evidence: neighborhood crop.\n"
-        "Be conservative. If uncertain, leave fields null and set needs_human_verification to true.\n"
+        "If uncertain, leave fields null and set needs_human_verification to true.\n"
         "The field ocr_text means only text physically printed on the component body itself.\n"
         "Do not include PCB silkscreen, board labels, logos, watermark text, packaging text, or any background text.\n"
-        "If text is not clearly on the component body, set ocr_text to null.\n"
         "Do not guess unreadable markings.\n"
+        "Avoid repeating the same information across display_name, one_line_label, function_summary, and confidence_note.\n"
+        "Field expectations:\n"
+        "- resolved_type is the canonical category used for UI filtering.\n"
+        "It must be exactly one of: resistor, capacitor, ic, diode, transistor, inductor, led, connector, unknown.\n"
+        "Use the detector type when it is clearly correct.\n"
+        "If detector type is unknown but the component is visually identifiable, assign the best canonical category.\n"
+        "If uncertain, use unknown.\n"
+        "- display_name: short noun phrase, ideally 2 to 4 words.\n"
+        "- one_line_label: compact user-facing label, ideally no more than 6 words.\n"
+        "- function_summary: one or two short sentences, ideally 12 to 22 words total.\n"
+        "  Prefer 15 to 18 words when that improves clarity.\n"
+        "  Use the available space to say the component's likely role on this board.\n"
+        "  Do not pad with generic filler or textbook definitions.\n"
+        "- datasheet_search_terms: 1 to 3 short search phrases.\n"
         "Return only valid JSON matching the supplied schema."
     )
 
@@ -202,6 +219,8 @@ def enrich_component(
         "- datasheet_search_terms should be short search phrases, not URLs.\n"
         "- ocr_text must contain only markings printed directly on the component itself.\n"
         "- Ignore text printed elsewhere on the PCB or elsewhere in the image.\n"
+        "- Do not repeat the same phrase across multiple fields unless necessary.\n"
+        "- If the role is uncertain, say 'likely' briefly rather than overstating confidence.\n"
     )
 
     content: list[dict[str, Any]] = [

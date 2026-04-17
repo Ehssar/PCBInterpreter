@@ -3,6 +3,7 @@
   "$id": "https://example.com/schemas/analyze_response.schema.json",
   "title": "AnalyzeResponse",
   "type": "object",
+  "resolved_type": {"type": ["string", "null"]},
   "required": [
     "request_id",
     "board_id",
@@ -75,6 +76,7 @@
       "required": [
         "component_id",
         "type",
+        "resolved_type",
         "confidence",
         "bbox",
         "source_label",

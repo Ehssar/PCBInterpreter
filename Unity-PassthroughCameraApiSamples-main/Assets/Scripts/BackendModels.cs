@@ -35,6 +35,7 @@ public class ComponentResult
 {
     public string component_id;
     public string type;
+    public string resolved_type;
     public float confidence;
     public int[] bbox; // [x, y, w, h]
     public string source_label;
@@ -52,8 +53,8 @@ public class ComponentResult
         if (enrichment != null && !string.IsNullOrWhiteSpace(enrichment.display_name))
             return enrichment.display_name;
 
-        if (!string.IsNullOrWhiteSpace(type))
-            return type;
+        if (!string.IsNullOrWhiteSpace(resolved_type))
+            return resolved_type;
 
         if (!string.IsNullOrWhiteSpace(source_label))
             return source_label;
@@ -94,7 +95,7 @@ public class ComponentResult
 
     public LabelCategory GetCategory()
     {
-        string raw = !string.IsNullOrWhiteSpace(type) ? type : source_label;
+        string raw = !string.IsNullOrWhiteSpace(resolved_type) ? resolved_type : source_label;
 
         if (string.IsNullOrWhiteSpace(raw))
             return LabelCategory.Unknown;

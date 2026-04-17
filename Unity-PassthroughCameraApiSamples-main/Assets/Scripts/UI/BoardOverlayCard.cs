@@ -119,8 +119,7 @@ public class BoardOverlayCard : MonoBehaviour
         if (grabInteractable == null)
             return;
 
-        bool isCurrentlyGrabbed =
-            grabInteractable.State == InteractableState.Select;
+        bool isCurrentlyGrabbed = grabInteractable.State == InteractableState.Select;
 
         if (isCurrentlyGrabbed && !wasGrabbedLastFrame)
         {

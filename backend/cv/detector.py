@@ -121,12 +121,44 @@ def _pretty_name(component_type: str, raw_label: str) -> str:
     return component_type.replace("_", " ").title()
 
 
+def _make_default_subtitle(component_type: str, raw_label: str) -> str:
+    raw_lower = raw_label.lower().strip()
+
+    if component_type == "resistor":
+        return "SMD resistor"
+
+    if component_type == "capacitor":
+        if "electrolytic" in raw_lower:
+            return "Polarized capacitor"
+        return "SMD capacitor"
+
+    if component_type == "ic":
+        return "Integrated circuit"
+
+    if component_type == "diode":
+        return "Semiconductor diode"
+
+    if component_type == "transistor":
+        return "Discrete transistor"
+
+    if component_type == "inductor":
+        return "Power inductor"
+
+    if component_type == "led":
+        return "Light-emitting diode"
+
+    if component_type == "connector":
+        return "Board connector"
+
+    return "PCB component"
+
+
 def _make_component_label(component_type: str, raw_label: str) -> dict[str, Any]:
     title = _pretty_name(component_type, raw_label)
 
     return {
         "title": title,
-        "subtitle": "Press Y for details",
+        "subtitle": _make_default_subtitle(component_type, raw_label),
         "visible": True,
         "pinned": False,
     }
@@ -277,6 +309,7 @@ def _normalize_prediction(pred: dict[str, Any]) -> dict[str, Any] | None:
     return {
         "component_id": str(uuid.uuid4())[:8],
         "type": component_type,
+        "resolved_type": component_type,
         "confidence": conf,
         "bbox": bbox,
         "source_label": raw_label,
@@ -432,6 +465,21 @@ def detect_components_bgr(image_bgr: np.ndarray) -> dict[str, Any]:
 
             if enrichment.get("one_line_label"):
                 component["label"]["subtitle"] = enrichment["one_line_label"]
+
+            allowed_types = {
+                "resistor", "capacitor", "ic", "diode",
+                "transistor", "inductor", "led", "connector", "unknown"
+            }
+
+            raw_type = str(component.get("type", "unknown")).lower()
+            enriched_resolved_type = str(enrichment.get("resolved_type", "unknown")).lower()
+
+            if raw_type != "unknown":
+                component["resolved_type"] = raw_type
+            elif enriched_resolved_type in allowed_types:
+                component["resolved_type"] = enriched_resolved_type
+            else:
+                component["resolved_type"] = "unknown"
 
             enriched_count += 1
 
