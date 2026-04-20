@@ -51,7 +51,7 @@ public class FrameCaptureAndSend : MonoBehaviour
             if (Time.time - lastSendTime >= minSecondsBetweenSends)
             {
                 lastSendTime = Time.time;
-                overlay?.SetStatus("Analyzing...");
+                overlay?.SetStatus("Image Sent Analyzing...");
                 StartCoroutine(CaptureAndSend());
             }
         }
@@ -76,7 +76,7 @@ public class FrameCaptureAndSend : MonoBehaviour
         {
             if (pcaDirectCapture == null)
             {
-                overlay?.SetStatus("Capture failed: PcaDirectCapture missing");
+                overlay?.SetStatusTimed("Capture failed: PcaDirectCapture missing", 3.0f);
                 Debug.LogError("PcaDirectCapture reference is missing.");
                 yield break;
             }
@@ -101,14 +101,14 @@ public class FrameCaptureAndSend : MonoBehaviour
 
             if (!string.IsNullOrEmpty(captureError))
             {
-                overlay?.SetStatus($"Capture failed: {captureError}");
+                overlay?.SetStatusTimed($"Capture failed: {captureError}", 4.0f);
                 Debug.LogError(captureError);
                 yield break;
             }
 
             if (tex == null)
             {
-                overlay?.SetStatus("Capture failed: null passthrough frame");
+                overlay?.SetStatusTimed("Capture failed: null passthrough frame", 3.0f);
                 Debug.LogError("TryCaptureLatestFrame returned null texture.");
                 yield break;
             }
@@ -117,7 +117,7 @@ public class FrameCaptureAndSend : MonoBehaviour
 
             if (tex.width <= 0 || tex.height <= 0)
             {
-                overlay?.SetStatus("Capture failed: invalid texture dimensions");
+                overlay?.SetStatusTimed("Capture failed: invalid texture dimensions", 3.0f);
                 Debug.LogError("Captured texture had invalid dimensions.");
                 yield break;
             }
@@ -125,7 +125,7 @@ public class FrameCaptureAndSend : MonoBehaviour
             byte[] jpg = tex.EncodeToJPG(jpegQuality);
             if (jpg == null || jpg.Length == 0)
             {
-                overlay?.SetStatus("Capture failed: EncodeToJPG returned no data");
+                overlay?.SetStatusTimed("Capture failed: EncodeToJPG returned no data", 3.0f);
                 Debug.LogError("EncodeToJPG returned null or empty bytes.");
                 yield break;
             }
@@ -145,7 +145,7 @@ public class FrameCaptureAndSend : MonoBehaviour
             {
                 string err = $"POST failed: {req.responseCode} {req.error}\n{req.downloadHandler.text}";
                 Debug.LogError(err);
-                overlay?.SetStatus(err);
+                overlay?.SetStatusTimed(err, 5.0f);
                 yield break; // IMPORTANT: don't fall through and overwrite status
             }
 
@@ -164,7 +164,7 @@ public class FrameCaptureAndSend : MonoBehaviour
 
             if (resp == null)
             {
-                overlay?.SetStatus("Parsed response was null (JSON mismatch?)");
+                overlay?.SetStatusTimed("Parsed response was null (JSON mismatch?)", 3.0f);
             }
             else
             {

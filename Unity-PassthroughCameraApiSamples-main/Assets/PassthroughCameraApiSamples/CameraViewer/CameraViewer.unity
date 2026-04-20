@@ -4148,8 +4148,8 @@ MonoBehaviour:
   labelPlaneForwardOffset: -0.03
   boardPlaneWidth: 0.7
   boardPlaneHeight: 0.5
-  labelHorizontalSpread: 1.5
-  labelVerticalSpread: 1.5
+  labelHorizontalSpread: 1.7
+  labelVerticalSpread: 1.7
   labelVerticalBias: -0.03
   updateAnchorsEveryFrame: 0
   forceVisibleForDebug: 0
@@ -4280,6 +4280,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1865528388}
     m_Modifications:
+    - target: {fileID: 2073883201896451687, guid: 6c8f51c0c4ebe4902a313954838e1de9, type: 3}
+      propertyPath: m_Text
+      value: Press MENU to reset
+      objectReference: {fileID: 0}
     - target: {fileID: 2073883202203575097, guid: 6c8f51c0c4ebe4902a313954838e1de9, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
       value: 0
@@ -4291,6 +4295,14 @@ PrefabInstance:
     - target: {fileID: 2073883202203575097, guid: 6c8f51c0c4ebe4902a313954838e1de9, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2073883202203575102, guid: 6c8f51c0c4ebe4902a313954838e1de9, type: 3}
+      propertyPath: _handTooltip
+      value: "Press \u2630 to reset"
+      objectReference: {fileID: 0}
+    - target: {fileID: 2073883202203575102, guid: 6c8f51c0c4ebe4902a313954838e1de9, type: 3}
+      propertyPath: _controllerTooltip
+      value: "Press \u2630 to reset"
       objectReference: {fileID: 0}
     - target: {fileID: 2073883202203575103, guid: 6c8f51c0c4ebe4902a313954838e1de9, type: 3}
       propertyPath: m_Name
@@ -5190,6 +5202,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: OVRLeftHandVisual
       objectReference: {fileID: 0}
+    - target: {fileID: 6536860776232889746, guid: 70d02a90551f23042a882cdceeaf8e3a, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 6536860776232889756, guid: 70d02a90551f23042a882cdceeaf8e3a, type: 3}
       propertyPath: _hand
       value: 
@@ -5707,6 +5723,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: OVRRightControllerVisual
       objectReference: {fileID: 0}
+    - target: {fileID: 699218207496619424, guid: a3cb63fbc355e984e9e5c2ca9e016b73, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 699218207496619425, guid: a3cb63fbc355e984e9e5c2ca9e016b73, type: 3}
       propertyPath: m_RootOrder
       value: 8
@@ -5815,6 +5835,10 @@ PrefabInstance:
     - target: {fileID: 1480221230899931350, guid: 50375bfeeea522849bd08dabcf6aeb83, type: 3}
       propertyPath: m_Name
       value: OVRHands
+      objectReference: {fileID: 0}
+    - target: {fileID: 1480221230899931350, guid: 50375bfeeea522849bd08dabcf6aeb83, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1480221230899931351, guid: 50375bfeeea522849bd08dabcf6aeb83, type: 3}
       propertyPath: m_RootOrder
@@ -5936,6 +5960,10 @@ PrefabInstance:
     - target: {fileID: 3305808594236175182, guid: b85d72bc453302d4a8170c6af3569a62, type: 3}
       propertyPath: m_Name
       value: OVRControllers
+      objectReference: {fileID: 0}
+    - target: {fileID: 3305808594236175182, guid: b85d72bc453302d4a8170c6af3569a62, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3305808594236175185, guid: b85d72bc453302d4a8170c6af3569a62, type: 3}
       propertyPath: m_RootOrder
@@ -6130,6 +6158,10 @@ PrefabInstance:
     - target: {fileID: 598406473808790662, guid: 84fb920df333c8643ab453a203766165, type: 3}
       propertyPath: m_Name
       value: LeftInteractions
+      objectReference: {fileID: 0}
+    - target: {fileID: 598406473808790662, guid: 84fb920df333c8643ab453a203766165, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 949280235676358213, guid: 84fb920df333c8643ab453a203766165, type: 3}
       propertyPath: _updateAfter
@@ -7120,6 +7152,10 @@ PrefabInstance:
       propertyPath: _ovrCameraRig
       value: 
       objectReference: {fileID: 1441500614}
+    - target: {fileID: 5881388596992792706, guid: 2f94427b8dd14ea498fd92aee3ec9f0f, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 6357171400049970933, guid: 2f94427b8dd14ea498fd92aee3ec9f0f, type: 3}
       propertyPath: m_RootOrder
       value: 0
@@ -7646,6 +7682,10 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2536449384481734771, guid: f525d8cc2d85e0e45ba0ba3585ca9072, type: 3}
+      propertyPath: overlay
+      value: 
+      objectReference: {fileID: 446239324}
     - target: {fileID: 2536449384481734771, guid: f525d8cc2d85e0e45ba0ba3585ca9072, type: 3}
       propertyPath: labelSpawner
       value: 
@@ -9560,6 +9600,10 @@ PrefabInstance:
     - target: {fileID: 699218207496619424, guid: a3cb63fbc355e984e9e5c2ca9e016b73, type: 3}
       propertyPath: m_Name
       value: OVRLeftControllerVisual
+      objectReference: {fileID: 0}
+    - target: {fileID: 699218207496619424, guid: a3cb63fbc355e984e9e5c2ca9e016b73, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 699218207496619425, guid: a3cb63fbc355e984e9e5c2ca9e016b73, type: 3}
       propertyPath: m_RootOrder

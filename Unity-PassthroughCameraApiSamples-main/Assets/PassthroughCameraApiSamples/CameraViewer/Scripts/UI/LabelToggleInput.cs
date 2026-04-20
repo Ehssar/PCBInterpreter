@@ -18,10 +18,17 @@ public class LabelToggleInput : MonoBehaviour
         // Left controller Y for toggling details mode (additional info on labels)
         if (OVRInput.GetDown(OVRInput.Button.Four))
         {
+            Debug.Log("Y pressed");
             labelSpawner.ToggleDetailsMode();
 
             if (overlay != null)
-                overlay.SetStatusTimed("Details Mode", 2.0f);
+            {
+                string message = labelSpawner.IsDetailsMode()
+                    ? "Details Mode On"
+                    : "Details Mode Off";
+
+                overlay.SetStatusTimed(message, 2.0f);
+            }
         }
     }
 
@@ -37,14 +44,14 @@ public class LabelToggleInput : MonoBehaviour
         if (!boardSessionManager.HasSession)
         {
             Debug.Log("LabelToggleInput: no active board session.");
-            overlay?.SetStatus("No analyzed board yet");
+            overlay?.SetStatusTimed("No analyzed board yet", 2.0f);
             return;
         }
 
         var session = boardSessionManager.CurrentSession;
         if (session == null)
         {
-            overlay?.SetStatus("No analyzed board yet");
+            overlay?.SetStatusTimed("No analyzed board yet", 2.0f);
             return;
         }
 

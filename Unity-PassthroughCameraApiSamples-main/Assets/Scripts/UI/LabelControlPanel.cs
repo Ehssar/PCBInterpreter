@@ -5,6 +5,7 @@ public class LabelControlPanel : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private LabelSpawner labelSpawner;
+    [SerializeField] private JsonOverlayUI overlay;
 
     // Keep this as the visual object only.
     // The script should live on an always-active anchor parent.
@@ -179,7 +180,16 @@ public class LabelControlPanel : MonoBehaviour
 
     public void TogglePanel()
     {
-        SetPanelVisible(!panelVisible);
+        bool newVisible = !panelVisible;
+        SetPanelVisible(newVisible);
+
+        if (overlay != null)
+        {
+            overlay.SetStatusTimed(
+                newVisible ? "Visibility Panel Shown" : "Visibility Panel Hidden",
+                2.0f
+            );
+        }
     }
 
     public void SetPanelVisible(bool visible)
