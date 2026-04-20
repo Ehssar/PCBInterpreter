@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -35,6 +34,7 @@ public class BoardOverlayCard : MonoBehaviour
     private bool isGrabbed = false;
     private bool shouldSmoothRotateToUser = false;
     private bool wasGrabbedLastFrame = false;
+    private bool initialized = false;
 
     private string hoveredComponentId;
     private string selectedComponentId;
@@ -62,15 +62,28 @@ public class BoardOverlayCard : MonoBehaviour
         }
     }
 
-    private IEnumerator Start()
+    private void Awake()
     {
-        yield return new WaitForSeconds(0.2f);
+        if (boardVisualRoot != null)
+            boardVisualRoot.SetActive(false);
 
-        if (headTransform == null && Camera.main != null)
-            headTransform = Camera.main.transform;
+        if (grabInteractable == null)
+            grabInteractable = GetComponent<GrabInteractable>();
+
+        if (grabInteractable == null)
+            grabInteractable = GetComponentInParent<GrabInteractable>();
+
+        initialized = false;
+    }
+
+    public void Initialize(Texture2D texture, Transform head)
+    {
+        headTransform = head != null ? head : (Camera.main != null ? Camera.main.transform : null);
 
         if (boardImage != null)
         {
+            boardImage.texture = texture;
+
             Vector3 s = boardImage.rectTransform.localScale;
             boardImage.rectTransform.localScale = new Vector3(-Mathf.Abs(s.x), s.y, s.z);
         }
@@ -81,17 +94,28 @@ public class BoardOverlayCard : MonoBehaviour
             boxOverlayContainer.localScale = new Vector3(-Mathf.Abs(s.x), s.y, s.z);
         }
 
+        initialized = true;
+
+        if (boardVisualRoot != null)
+            boardVisualRoot.SetActive(true);
+
         if (snapFacingOnStart)
             SnapFacingUser();
     }
 
     private void Update()
     {
+        if (!initialized)
+            return;
+
         UpdateGrabState();
     }
 
     private void LateUpdate()
     {
+        if (!initialized)
+            return;
+
         if (!faceUserOnRelease || !smoothFaceUser || !shouldSmoothRotateToUser || isGrabbed)
             return;
 
@@ -167,13 +191,9 @@ public class BoardOverlayCard : MonoBehaviour
             return;
 
         if (smoothFaceUser)
-        {
             shouldSmoothRotateToUser = true;
-        }
         else
-        {
             SnapFacingUser();
-        }
     }
 
     public void SetHeadTransform(Transform head)
@@ -219,11 +239,7 @@ public class BoardOverlayCard : MonoBehaviour
         return img;
     }
 
-    public void BuildBoxes(
-        List<ComponentResult> components,
-        float imageWidth,
-        float imageHeight
-    )
+    public void BuildBoxes(List<ComponentResult> components, float imageWidth, float imageHeight)
     {
         ClearBoxes();
 
@@ -241,7 +257,6 @@ public class BoardOverlayCard : MonoBehaviour
 
         float panelWidth = boxOverlayContainer.rect.width;
         float panelHeight = boxOverlayContainer.rect.height;
-        Debug.Log($"[BuildBoxes] panelWidth={panelWidth}, panelHeight={panelHeight}, imageWidth={imageWidth}, imageHeight={imageHeight}");
 
         foreach (var component in components)
         {
@@ -255,8 +270,6 @@ public class BoardOverlayCard : MonoBehaviour
             float y = component.bbox[1];
             float w = component.bbox[2];
             float h = component.bbox[3];
-
-            Debug.Log($"[BuildBoxes] raw bbox for {component.component_id}: x={x}, y={y}, w={w}, h={h}");
 
             GameObject go = new GameObject($"BBox_{component.component_id}", typeof(RectTransform));
             go.transform.SetParent(boxOverlayContainer, false);
@@ -299,28 +312,10 @@ public class BoardOverlayCard : MonoBehaviour
         RefreshAllBoxColors();
     }
 
-    public void ClearHoveredComponent(string componentId)
-    {
-        if (hoveredComponentId == componentId)
-        {
-            hoveredComponentId = null;
-            RefreshAllBoxColors();
-        }
-    }
-
     public void SetSelectedComponent(string componentId)
     {
         selectedComponentId = string.IsNullOrWhiteSpace(componentId) ? null : componentId;
         RefreshAllBoxColors();
-    }
-
-    public void ClearSelectedComponent(string componentId)
-    {
-        if (selectedComponentId == componentId)
-        {
-            selectedComponentId = null;
-            RefreshAllBoxColors();
-        }
     }
 
     private void RefreshAllBoxColors()
@@ -334,17 +329,11 @@ public class BoardOverlayCard : MonoBehaviour
                 continue;
 
             if (id == selectedComponentId)
-            {
                 visual.SetColor(selectedBoxColor);
-            }
             else if (id == hoveredComponentId)
-            {
                 visual.SetColor(hoveredBoxColor);
-            }
             else
-            {
                 visual.SetColor(defaultBoxColor);
-            }
         }
     }
 

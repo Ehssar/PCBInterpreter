@@ -212,10 +212,10 @@ public class LabelSpawner : MonoBehaviour
         currentBoardOverlayCard.transform.localRotation = Quaternion.Euler(boardOverlayEulerOffset);
         currentBoardOverlayCard.transform.localScale = Vector3.one;
 
-        if (targetCamera != null)
-            currentBoardOverlayCard.SetHeadTransform(targetCamera.transform);
-
-        currentBoardOverlayCard.SetBoardTexture(boardTexture);
+        currentBoardOverlayCard.Initialize(
+            boardTexture,
+            targetCamera != null ? targetCamera.transform : null
+        );
 
         float imageWidth = session.imageWidth > 0 ? session.imageWidth : 1f;
         float imageHeight = session.imageHeight > 0 ? session.imageHeight : 1f;

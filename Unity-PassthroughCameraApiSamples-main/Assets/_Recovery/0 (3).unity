@@ -8815,10 +8815,6 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4412388492887896093, guid: 5ba5b497bb5f35c418eff72b69089c23, type: 3}
-      propertyPath: boardVisualRoot
-      value: 
-      objectReference: {fileID: 8349998467916317897}
-    - target: {fileID: 4412388492887896093, guid: 5ba5b497bb5f35c418eff72b69089c23, type: 3}
       propertyPath: bboxOverlayPrefab
       value: 
       objectReference: {fileID: 1684726407}
@@ -8915,11 +8911,6 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 746706247}
   m_SourcePrefab: {fileID: 100100000, guid: 5ba5b497bb5f35c418eff72b69089c23, type: 3}
---- !u!1 &8349998467916317897 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 3153755694622250216, guid: 5ba5b497bb5f35c418eff72b69089c23, type: 3}
-  m_PrefabInstance: {fileID: 8349998467916317896}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &8537875412062044832
 PrefabInstance:
   m_ObjectHideFlags: 0
