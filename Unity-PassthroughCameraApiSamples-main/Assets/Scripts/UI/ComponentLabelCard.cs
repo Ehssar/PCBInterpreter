@@ -9,6 +9,20 @@ public class ComponentLabelCard : MonoBehaviour
     [SerializeField] private GameObject visualRoot;
     [SerializeField] private Transform faceTargetRoot;
 
+    [Header("Sizing")]
+    [SerializeField] private RectTransform canvasRootRect;
+    [SerializeField] private RectTransform backplateRect;
+    [SerializeField] private RectTransform contentRootRect;
+
+    [SerializeField] private float compactCanvasHeight = 210f;
+    [SerializeField] private float expandedCanvasHeight = 300f;
+
+    [SerializeField] private float compactBackplateHeight = 178f;
+    [SerializeField] private float expandedBackplateHeight = 268f;
+
+    [SerializeField] private float compactContentHeight = 136f;
+    [SerializeField] private float expandedContentHeight = 220f;
+
     [Header("Text")]
     [SerializeField] private TextMeshProUGUI titleText;
     [SerializeField] private TextMeshProUGUI subtitleText;
@@ -100,6 +114,23 @@ public class ComponentLabelCard : MonoBehaviour
         SnapFacingUser();
     }
 
+    private void ApplySize(bool expanded)
+    {
+        SetHeight(canvasRootRect, expanded ? expandedCanvasHeight : compactCanvasHeight);
+        SetHeight(backplateRect, expanded ? expandedBackplateHeight : compactBackplateHeight);
+        SetHeight(contentRootRect, expanded ? expandedContentHeight : compactContentHeight);
+    }
+
+    private void SetHeight(RectTransform rt, float height)
+    {
+        if (rt == null)
+            return;
+
+        Vector2 size = rt.sizeDelta;
+        size.y = height;
+        rt.sizeDelta = size;
+    }
+
     public void RefreshText(ComponentResult component, bool detailsMode)
     {
         if (component == null) return;
@@ -110,14 +141,20 @@ public class ComponentLabelCard : MonoBehaviour
         if (subtitleText != null)
             subtitleText.text = component.GetResolvedLabelSubtitle();
 
+        bool showDetail = false;
+
         if (detailText != null)
         {
             string detail = detailsMode ? GetResolvedDetailText(component) : string.Empty;
             detailText.text = detail;
 
+            showDetail = !string.IsNullOrWhiteSpace(detail);
+
             if (hideDetailWhenEmpty)
-                detailText.gameObject.SetActive(!string.IsNullOrWhiteSpace(detail));
+                detailText.gameObject.SetActive(showDetail);
         }
+
+        ApplySize(detailsMode && showDetail);
     }
 
     public void SetVisible(bool visible)

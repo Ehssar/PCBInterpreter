@@ -459,6 +459,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.ContentSizeFitter
   m_HorizontalFit: 0
   m_VerticalFit: 2
+--- !u!224 &219789814 stripped
+RectTransform:
+  m_CorrespondingSourceObject: {fileID: 617478033835963865, guid: dd007df069898fd45b9fa0684e0530e8, type: 3}
+  m_PrefabInstance: {fileID: 8537875412062044832}
+  m_PrefabAsset: {fileID: 0}
 --- !u!114 &259225206 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 3941605750109009437, guid: 84fb920df333c8643ab453a203766165, type: 3}
@@ -2027,6 +2032,11 @@ MonoBehaviour:
   _grabCenter: {fileID: 0}
   _grabTarget: {fileID: 0}
   _velocityCalculator: {fileID: 0}
+--- !u!224 &617446485 stripped
+RectTransform:
+  m_CorrespondingSourceObject: {fileID: 5141098686516150340, guid: dd007df069898fd45b9fa0684e0530e8, type: 3}
+  m_PrefabInstance: {fileID: 8537875412062044832}
+  m_PrefabAsset: {fileID: 0}
 --- !u!114 &624947236 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 8849477553648128550, guid: 84fb920df333c8643ab453a203766165, type: 3}
@@ -3059,6 +3069,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ComponentLabelCard
   visualRoot: {fileID: 0}
   faceTargetRoot: {fileID: 0}
+  canvasRootRect: {fileID: 0}
+  backplateRect: {fileID: 0}
+  contentRootRect: {fileID: 0}
+  compactCanvasHeight: 210
+  expandedCanvasHeight: 300
+  compactBackplateHeight: 178
+  expandedBackplateHeight: 268
+  compactContentHeight: 136
+  expandedContentHeight: 220
   titleText: {fileID: 78546558}
   subtitleText: {fileID: 2125117609}
   detailText: {fileID: 270308748}
@@ -9097,13 +9116,37 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1848740388}
     - target: {fileID: 4342917602473316964, guid: dd007df069898fd45b9fa0684e0530e8, type: 3}
+      propertyPath: backplateRect
+      value: 
+      objectReference: {fileID: 219789814}
+    - target: {fileID: 4342917602473316964, guid: dd007df069898fd45b9fa0684e0530e8, type: 3}
       propertyPath: headTransform
       value: 
       objectReference: {fileID: 1848740388}
     - target: {fileID: 4342917602473316964, guid: dd007df069898fd45b9fa0684e0530e8, type: 3}
+      propertyPath: canvasRootRect
+      value: 
+      objectReference: {fileID: 687195750}
+    - target: {fileID: 4342917602473316964, guid: dd007df069898fd45b9fa0684e0530e8, type: 3}
+      propertyPath: contentRootRect
+      value: 
+      objectReference: {fileID: 617446485}
+    - target: {fileID: 4342917602473316964, guid: dd007df069898fd45b9fa0684e0530e8, type: 3}
       propertyPath: grabInteractable
       value: 
       objectReference: {fileID: 542475443}
+    - target: {fileID: 4342917602473316964, guid: dd007df069898fd45b9fa0684e0530e8, type: 3}
+      propertyPath: compactCanvasHeight
+      value: 200
+      objectReference: {fileID: 0}
+    - target: {fileID: 4342917602473316964, guid: dd007df069898fd45b9fa0684e0530e8, type: 3}
+      propertyPath: compactContentHeight
+      value: 128
+      objectReference: {fileID: 0}
+    - target: {fileID: 4342917602473316964, guid: dd007df069898fd45b9fa0684e0530e8, type: 3}
+      propertyPath: compactBackplateHeight
+      value: 170
+      objectReference: {fileID: 0}
     - target: {fileID: 4443133394802844263, guid: dd007df069898fd45b9fa0684e0530e8, type: 3}
       propertyPath: m_Color.a
       value: 0.7490196
