@@ -31,28 +31,26 @@ def make_mock_component(h: str):
     return {
         "component_id": f"comp_{h}",
         "type": component_type,
+        "resolved_type": component_type,
         "confidence": 0.50,
         "bbox": [x, y, w, hh],
         "source_label": "mock",
         "label": {
-            "title": "Unknown",
-            "subtitle": "Mock detection",
+            "title": "Unknown Component",
+            "subtitle": "PCB component",
             "visible": False,
             "pinned": False,
         },
-        "details": {
-            "summary": "Mock component used as fallback",
+        "enrichment": {
+            "resolved_type": "unknown",
+            "display_name": "Unknown Component",
+            "one_line_label": "PCB component",
+            "function_summary": "Mock fallback detection used when model inference is unavailable.",
+            "confidence_note": "Fallback result.",
             "ocr_text": None,
-            "datasheet_url": "https://example.com/datasheet",
-            "raw_model_label": "mock",
+            "needs_human_verification": True,
         },
-        "candidates": [
-            {
-                "part_number": f"MOCK-{h}",
-                "confidence": 0.50,
-                "datasheet_url": "https://example.com/datasheet"
-            }
-        ]
+        "candidates": [],
     }
 
 

@@ -73,12 +73,11 @@ public class ComponentResult
         if (enrichment != null && !string.IsNullOrWhiteSpace(enrichment.function_summary))
             return enrichment.function_summary;
 
-        if (enrichment != null &&
-            enrichment.attributes != null &&
-            !string.IsNullOrWhiteSpace(enrichment.attributes.likely_role))
-        {
-            return enrichment.attributes.likely_role;
-        }
+        if (enrichment != null && !string.IsNullOrWhiteSpace(enrichment.confidence_note))
+            return enrichment.confidence_note;
+
+        if (enrichment != null && !string.IsNullOrWhiteSpace(enrichment.ocr_text))
+            return enrichment.ocr_text;
 
         if (candidates != null && candidates.Count > 0 && !string.IsNullOrWhiteSpace(candidates[0].part_number))
             return candidates[0].part_number;
@@ -112,6 +111,7 @@ public class ComponentResult
             "diode" => LabelCategory.Diode,
             "transistor" => LabelCategory.Transistor,
             "inductor" => LabelCategory.Inductor,
+            "led" => LabelCategory.LED,
             _ => LabelCategory.Unknown
         };
     }
@@ -130,32 +130,13 @@ public class DetectionInfo
 [Serializable]
 public class EnrichmentInfo
 {
+    public string resolved_type;
     public string display_name;
     public string one_line_label;
     public string function_summary;
     public string confidence_note;
     public string ocr_text;
-    public string datasheet_url;
     public bool needs_human_verification;
-    public List<string> datasheet_search_terms = new();
-    public ComponentAttributes attributes;
-}
-
-[Serializable]
-public class ComponentAttributes
-{
-    public string package;
-    public float package_confidence;
-    public string marking_text;
-    public string part_family;
-    public float part_family_confidence;
-    public string electrical_value;
-    public float electrical_value_confidence;
-    public string likely_role;
-    public float likely_role_confidence;
-    public string mount_type;
-    public int pin_count;
-    public bool polarized;
 }
 
 [Serializable]
@@ -184,5 +165,6 @@ public enum LabelCategory
     Connector,
     Diode,
     Transistor,
-    Inductor
+    Inductor,
+    LED
 }

@@ -164,53 +164,53 @@ def _make_component_label(component_type: str, raw_label: str) -> dict[str, Any]
     }
 
 
-def _make_attributes(component_type: str, raw_label: str) -> dict[str, Any]:
-    raw_lower = raw_label.lower().strip()
+# def _make_attributes(component_type: str, raw_label: str) -> dict[str, Any]:
+#     raw_lower = raw_label.lower().strip()
 
-    package = None
-    package_confidence = None
-    part_family = None
-    part_family_confidence = None
-    electrical_value = None
-    electrical_value_confidence = None
-    likely_role = None
-    likely_role_confidence = None
-    mount_type = None
-    pin_count = None
-    polarized = None
-    marking_text = None
+#     package = None
+#     package_confidence = None
+#     part_family = None
+#     part_family_confidence = None
+#     electrical_value = None
+#     electrical_value_confidence = None
+#     likely_role = None
+#     likely_role_confidence = None
+#     mount_type = None
+#     pin_count = None
+#     polarized = None
+#     marking_text = None
 
-    # Conservative CV-only heuristics for now.
-    # These are placeholders so the schema is ready for OCR/LLM enrichment later.
-    if component_type in {"resistor", "capacitor", "ic", "diode", "transistor", "inductor", "led"}:
-        mount_type = "SMD"
+#     # Conservative CV-only heuristics for now.
+#     # These are placeholders so the schema is ready for OCR/LLM enrichment later.
+#     if component_type in {"resistor", "capacitor", "ic", "diode", "transistor", "inductor", "led"}:
+#         mount_type = "SMD"
 
-    if component_type == "capacitor":
-        if "electrolytic" in raw_lower:
-            polarized = True
-            likely_role = "bulk capacitor"
-            likely_role_confidence = 0.45
-        else:
-            polarized = False
+#     if component_type == "capacitor":
+#         if "electrolytic" in raw_lower:
+#             polarized = True
+#             likely_role = "bulk capacitor"
+#             likely_role_confidence = 0.45
+#         else:
+#             polarized = False
 
-    if component_type == "ic":
-        part_family = "integrated circuit"
-        part_family_confidence = 0.35
+#     if component_type == "ic":
+#         part_family = "integrated circuit"
+#         part_family_confidence = 0.35
 
-    return {
-        "package": package,
-        "package_confidence": package_confidence,
-        "marking_text": marking_text,
-        "part_family": part_family,
-        "part_family_confidence": part_family_confidence,
-        "electrical_value": electrical_value,
-        "electrical_value_confidence": electrical_value_confidence,
-        "likely_role": likely_role,
-        "likely_role_confidence": likely_role_confidence,
-        "mount_type": mount_type,
-        "pin_count": pin_count,
-        "polarized": polarized,
-    }
+#     return {
+#         "package": package,
+#         "package_confidence": package_confidence,
+#         "marking_text": marking_text,
+#         "part_family": part_family,
+#         "part_family_confidence": part_family_confidence,
+#         "electrical_value": electrical_value,
+#         "electrical_value_confidence": electrical_value_confidence,
+#         "likely_role": likely_role,
+#         "likely_role_confidence": likely_role_confidence,
+#         "mount_type": mount_type,
+#         "pin_count": pin_count,
+#         "polarized": polarized,
+#     }
 
 def _should_enrich_component(component: dict[str, Any]) -> bool:
     component_type = str(component.get("type", "")).lower()
@@ -226,15 +226,13 @@ def _make_enrichment(component_type: str, raw_label: str) -> dict[str, Any]:
     display_name = _pretty_name(component_type, raw_label)
 
     return {
+        "resolved_type": component_type,
         "display_name": display_name,
-        "one_line_label": f"Likely {component_type}",
-        "function_summary": f"Detected {component_type}. Additional functional detail unavailable for this pass.",
+        "one_line_label": _make_default_subtitle(component_type, raw_label),
+        "function_summary": f"Detected {component_type}. Additional board-specific role is unavailable in this pass.",
         "confidence_note": "Preliminary CV-only result.",
         "ocr_text": None,
-        "datasheet_url": None,
         "needs_human_verification": True,
-        "datasheet_search_terms": [component_type],
-        "attributes": _make_attributes(component_type, raw_label),
     }
 
 
@@ -248,46 +246,46 @@ def _make_detection(component_type: str, raw_label: str, conf: float) -> dict[st
     }
 
 
-def _mock_candidates_for_type(component_type: str) -> list[dict[str, Any]]:
-    mock_map = {
-        "resistor": [
-            {
-                "part_number": "RC0603FR-0710KL",
-                "confidence": 0.42,
-                "datasheet_url": "https://example.com/resistor-datasheet",
-            }
-        ],
-        "capacitor": [
-            {
-                "part_number": "CL10A106KP8NNNC",
-                "confidence": 0.40,
-                "datasheet_url": "https://example.com/capacitor-datasheet",
-            }
-        ],
-        "ic": [
-            {
-                "part_number": "LM358",
-                "confidence": 0.35,
-                "datasheet_url": "https://example.com/ic-datasheet",
-            }
-        ],
-        "diode": [
-            {
-                "part_number": "1N4148",
-                "confidence": 0.38,
-                "datasheet_url": "https://example.com/diode-datasheet",
-            }
-        ],
-        "connector": [
-            {
-                "part_number": "HDR-2.54-8P",
-                "confidence": 0.30,
-                "datasheet_url": "https://example.com/connector-datasheet",
-            }
-        ],
-    }
+# def _mock_candidates_for_type(component_type: str) -> list[dict[str, Any]]:
+#     mock_map = {
+#         "resistor": [
+#             {
+#                 "part_number": "RC0603FR-0710KL",
+#                 "confidence": 0.42,
+#                 "datasheet_url": "https://example.com/resistor-datasheet",
+#             }
+#         ],
+#         "capacitor": [
+#             {
+#                 "part_number": "CL10A106KP8NNNC",
+#                 "confidence": 0.40,
+#                 "datasheet_url": "https://example.com/capacitor-datasheet",
+#             }
+#         ],
+#         "ic": [
+#             {
+#                 "part_number": "LM358",
+#                 "confidence": 0.35,
+#                 "datasheet_url": "https://example.com/ic-datasheet",
+#             }
+#         ],
+#         "diode": [
+#             {
+#                 "part_number": "1N4148",
+#                 "confidence": 0.38,
+#                 "datasheet_url": "https://example.com/diode-datasheet",
+#             }
+#         ],
+#         "connector": [
+#             {
+#                 "part_number": "HDR-2.54-8P",
+#                 "confidence": 0.30,
+#                 "datasheet_url": "https://example.com/connector-datasheet",
+#             }
+#         ],
+#     }
 
-    return mock_map.get(component_type, [])
+#     return mock_map.get(component_type, [])
 
 
 def _normalize_prediction(pred: dict[str, Any]) -> dict[str, Any] | None:
@@ -316,7 +314,6 @@ def _normalize_prediction(pred: dict[str, Any]) -> dict[str, Any] | None:
         "detection": _make_detection(component_type, raw_label, conf),
         "enrichment": _make_enrichment(component_type, raw_label),
         "label": _make_component_label(component_type, raw_label),
-        "candidates": _mock_candidates_for_type(component_type),
     }
 
 # HELPER FUNCTIONS FOR Detect Components BGR
@@ -471,8 +468,8 @@ def detect_components_bgr(image_bgr: np.ndarray) -> dict[str, Any]:
                 "transistor", "inductor", "led", "connector", "unknown"
             }
 
-            raw_type = str(component.get("type", "unknown")).lower()
-            enriched_resolved_type = str(enrichment.get("resolved_type", "unknown")).lower()
+            raw_type = str(component.get("type", "unknown")).strip().lower()
+            enriched_resolved_type = str(enrichment.get("resolved_type", "unknown")).strip().lower()
 
             if raw_type != "unknown":
                 component["resolved_type"] = raw_type
