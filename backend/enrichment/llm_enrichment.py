@@ -230,7 +230,7 @@ def enrich_component(
         "Field expectations:\n"
         "- resolved_type is the canonical category used for UI filtering.\n"
         "It must be exactly one of: resistor, capacitor, ic, diode, transistor, inductor, led, connector, unknown.\n"
-        "Use the detector type when it is clearly correct.\n"
+        "Use the detector_type when it is clearly correct.\n"
         "If detector type is unknown but the component is visually identifiable, assign the best canonical category.\n"
         "If uncertain, use unknown.\n"
         "- display_name: short noun phrase, ideally 2 to 4 words.\n"
