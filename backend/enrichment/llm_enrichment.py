@@ -224,7 +224,6 @@ def enrich_component(
         "Use detector_type and source_label as priors, but do not invent exact part numbers.\n"
         "Primary evidence: tight component crop.\n"
         "Secondary evidence: neighborhood crop.\n"
-        "If uncertain, leave fields null.\n"
         "The field ocr_text means only text physically printed on the component body itself.\n"
         "Do not guess unreadable markings.\n"
         "Avoid repeating the same information across display_name, one_line_label, function_summary, and confidence_note.\n"

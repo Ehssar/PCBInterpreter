@@ -1,5 +1,6 @@
 from __future__ import annotations
 from enrichment.llm_enrichment import enrich_component
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import os
 import uuid
@@ -245,6 +246,46 @@ def _make_detection(component_type: str, raw_label: str, conf: float) -> dict[st
         "confidence": conf,
     }
 
+def _enrich_single_component(
+    component: dict[str, Any],
+    image_bgr: np.ndarray,
+) -> tuple[dict[str, Any], dict[str, Any] | None]:
+    x, y, w, h = component["bbox"]
+
+    x0 = max(0, x)
+    y0 = max(0, y)
+    x1 = min(image_bgr.shape[1], x + w)
+    y1 = min(image_bgr.shape[0], y + h)
+
+    if x1 <= x0 or y1 <= y0:
+        return component, None
+
+    component_crop = image_bgr[y0:y1, x0:x1]
+
+    neighborhood_crop = None
+    if LLM_USE_NEIGHBORHOOD_CROP:
+        pad_x = max(w // 2, 16)
+        pad_y = max(h // 2, 16)
+
+        nx0 = max(0, x0 - pad_x)
+        ny0 = max(0, y0 - pad_y)
+        nx1 = min(image_bgr.shape[1], x1 + pad_x)
+        ny1 = min(image_bgr.shape[0], y1 + pad_y)
+
+        if nx1 > nx0 and ny1 > ny0:
+            neighborhood_crop = image_bgr[ny0:ny1, nx0:nx1]
+
+    try:
+        enrichment = enrich_component(
+            component=component,
+            component_crop_bgr=component_crop,
+            neighborhood_crop_bgr=neighborhood_crop,
+        )
+        return component, enrichment
+    except Exception as e:
+        print(f"[LLM enrichment failed for {component.get('component_id', 'unknown')}] {e}")
+        return component, None
+
 
 # def _mock_candidates_for_type(component_type: str) -> list[dict[str, Any]]:
 #     mock_map = {
@@ -414,73 +455,51 @@ def detect_components_bgr(image_bgr: np.ndarray) -> dict[str, Any]:
     if debug_image_path:
         print(f"[detector debug] saved {debug_image_path}")
 
-    enriched_count = 0
+    eligible_components: list[dict[str, Any]] = []
 
     for component in components:
-        if enriched_count >= LLM_ENRICH_MAX_COMPONENTS:
+        if len(eligible_components) >= LLM_ENRICH_MAX_COMPONENTS:
             break
 
-        if not _should_enrich_component(component):
-            continue
+        if _should_enrich_component(component):
+            eligible_components.append(component)
 
-        x, y, w, h = component["bbox"]
+    if eligible_components:
+        max_workers = min(len(eligible_components), LLM_ENRICH_MAX_COMPONENTS)
 
-        x0 = max(0, x)
-        y0 = max(0, y)
-        x1 = min(image_bgr.shape[1], x + w)
-        y1 = min(image_bgr.shape[0], y + h)
-
-        if x1 <= x0 or y1 <= y0:
-            continue
-
-        component_crop = image_bgr[y0:y1, x0:x1]
-
-        neighborhood_crop = None
-        if LLM_USE_NEIGHBORHOOD_CROP:
-            pad_x = max(w // 2, 16)
-            pad_y = max(h // 2, 16)
-
-            nx0 = max(0, x0 - pad_x)
-            ny0 = max(0, y0 - pad_y)
-            nx1 = min(image_bgr.shape[1], x1 + pad_x)
-            ny1 = min(image_bgr.shape[0], y1 + pad_y)
-
-            if nx1 > nx0 and ny1 > ny0:
-                neighborhood_crop = image_bgr[ny0:ny1, nx0:nx1]
-
-        try:
-            enrichment = enrich_component(
-                component=component,
-                component_crop_bgr=component_crop,
-                neighborhood_crop_bgr=neighborhood_crop,
-            )
-
-            component["enrichment"] = enrichment
-
-            if enrichment.get("display_name"):
-                component["label"]["title"] = enrichment["display_name"]
-
-            if enrichment.get("one_line_label"):
-                component["label"]["subtitle"] = enrichment["one_line_label"]
-
-            allowed_types = {
-                "resistor", "capacitor", "ic", "diode",
-                "transistor", "inductor", "led", "connector", "unknown"
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            future_to_component_id = {
+                executor.submit(_enrich_single_component, component, image_bgr): component.get("component_id")
+                for component in eligible_components
             }
 
-            raw_type = str(component.get("type", "unknown")).strip().lower()
-            enriched_resolved_type = str(enrichment.get("resolved_type", "unknown")).strip().lower()
+            for future in as_completed(future_to_component_id):
+                component, enrichment = future.result()
 
-            if raw_type != "unknown":
-                component["resolved_type"] = raw_type
-            elif enriched_resolved_type in allowed_types:
-                component["resolved_type"] = enriched_resolved_type
-            else:
-                component["resolved_type"] = "unknown"
+                if enrichment is None:
+                    continue
 
-            enriched_count += 1
+                component["enrichment"] = enrichment
 
-        except Exception as e:
-            print(f"[LLM enrichment failed for {component.get('component_id', 'unknown')}] {e}")
+                if enrichment.get("display_name"):
+                    component["label"]["title"] = enrichment["display_name"]
+
+                if enrichment.get("one_line_label"):
+                    component["label"]["subtitle"] = enrichment["one_line_label"]
+
+                allowed_types = {
+                    "resistor", "capacitor", "ic", "diode",
+                    "transistor", "inductor", "led", "connector", "unknown"
+                }
+
+                raw_type = str(component.get("type", "unknown")).strip().lower()
+                enriched_resolved_type = str(enrichment.get("resolved_type", "unknown")).strip().lower()
+
+                if raw_type != "unknown":
+                    component["resolved_type"] = raw_type
+                elif enriched_resolved_type in allowed_types:
+                    component["resolved_type"] = enriched_resolved_type
+                else:
+                    component["resolved_type"] = "unknown"
 
     return {"components": components}
