@@ -149,6 +149,7 @@ public class LabelSpawner : MonoBehaviour
         Debug.Log($"[LabelSpawner] Spawned labels: {spawnedLabels.Count}");
         RefreshVisibility();
         RefreshOverlayInteractionState();
+        RefreshCardInteractionState();
     }
 
     private void CreateSessionRoot()
@@ -360,6 +361,7 @@ public class LabelSpawner : MonoBehaviour
     {
         hoveredComponentId = componentId;
         RefreshOverlayInteractionState();
+        RefreshCardInteractionState();
     }
 
     private void HandleCardHoverEnded(string componentId)
@@ -368,20 +370,37 @@ public class LabelSpawner : MonoBehaviour
             hoveredComponentId = null;
 
         RefreshOverlayInteractionState();
+        RefreshCardInteractionState();
     }
 
     private void HandleCardSelectedStarted(string componentId)
     {
         selectedComponentId = componentId;
         RefreshOverlayInteractionState();
+        RefreshCardInteractionState();
     }
 
     private void HandleCardSelectedEnded(string componentId)
     {
-        if (selectedComponentId == componentId)
-            selectedComponentId = null;
-
         RefreshOverlayInteractionState();
+        RefreshCardInteractionState();
+    }
+
+    private void RefreshCardInteractionState()
+    {
+        foreach (var kvp in spawnedLabels)
+        {
+            string id = kvp.Key;
+            ComponentLabelCard card = kvp.Value;
+
+            if (card == null)
+                continue;
+
+            bool hovered = id == hoveredComponentId;
+            bool selected = id == selectedComponentId;
+
+            card.SetInteractionVisualState(hovered, selected);
+        }
     }
 
     private void RefreshOverlayInteractionState()
@@ -463,6 +482,7 @@ public class LabelSpawner : MonoBehaviour
                     selectedComponentId = null;
 
                 RefreshOverlayInteractionState();
+                RefreshCardInteractionState();
             }
         }
     }

@@ -464,6 +464,17 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 617478033835963865, guid: dd007df069898fd45b9fa0684e0530e8, type: 3}
   m_PrefabInstance: {fileID: 8537875412062044832}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &219789818 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4443133394802844263, guid: dd007df069898fd45b9fa0684e0530e8, type: 3}
+  m_PrefabInstance: {fileID: 8537875412062044832}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 219789806}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &259225206 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 3941605750109009437, guid: 84fb920df333c8643ab453a203766165, type: 3}
@@ -744,6 +755,63 @@ MonoBehaviour:
   _resetGrabOnGrabsUpdated: 1
   _physicsGrabbable: {fileID: 0}
   _movementProvider: {fileID: 0}
+--- !u!114 &319820768 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1316581612124524430, guid: 5ba5b497bb5f35c418eff72b69089c23, type: 3}
+  m_PrefabInstance: {fileID: 8349998467916317896}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 319820757}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 43f86b14a27b52f4f9298c33015b5c26, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Oculus.Interaction::Oculus.Interaction.Grabbable
+--- !u!54 &319820769 stripped
+Rigidbody:
+  m_CorrespondingSourceObject: {fileID: 5333451981603365204, guid: 5ba5b497bb5f35c418eff72b69089c23, type: 3}
+  m_PrefabInstance: {fileID: 8349998467916317896}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &319820772
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 319820757}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9a7676b01585ce43908639a27765dfc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Oculus.Interaction::Oculus.Interaction.HandGrab.HandGrabInteractable
+  _interactorFilters: []
+  _maxInteractors: -1
+  _maxSelectingInteractors: -1
+  _data: {fileID: 0}
+  _pointableElement: {fileID: 319820768}
+  _rigidbody: {fileID: 319820769}
+  _physicsGrabbable: {fileID: 0}
+  _resetGrabOnGrabsUpdated: 1
+  _scoringModifier:
+    _positionRotationWeight: 0.8
+  _slippiness: 0
+  _supportedGrabTypes: 3
+  _pinchGrabRules:
+    _thumbRequirement: 1
+    _indexRequirement: 1
+    _middleRequirement: 1
+    _ringRequirement: 0
+    _pinkyRequirement: 0
+    _unselectMode: 0
+  _palmGrabRules:
+    _thumbRequirement: 1
+    _indexRequirement: 2
+    _middleRequirement: 2
+    _ringRequirement: 2
+    _pinkyRequirement: 1
+    _unselectMode: 0
+  _movementProvider: {fileID: 0}
+  _handAligment: 1
+  _handGrabPoses: []
 --- !u!1 &332941934
 GameObject:
   m_ObjectHideFlags: 0
@@ -3069,6 +3137,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ComponentLabelCard
   visualRoot: {fileID: 0}
   faceTargetRoot: {fileID: 0}
+  backgroundGraphic: {fileID: 0}
+  normalAlpha: 0.5
+  hoveredAlpha: 0.65
+  selectedAlpha: 0.8
   canvasRootRect: {fileID: 0}
   backplateRect: {fileID: 0}
   contentRootRect: {fileID: 0}
@@ -4167,8 +4239,8 @@ MonoBehaviour:
   labelPlaneForwardOffset: -0.03
   boardPlaneWidth: 0.7
   boardPlaneHeight: 0.5
-  labelHorizontalSpread: 1.7
-  labelVerticalSpread: 1.7
+  labelHorizontalSpread: 1.6
+  labelVerticalSpread: 1.6
   labelVerticalBias: -0.03
   updateAnchorsEveryFrame: 0
   forceVisibleForDebug: 0
@@ -4493,6 +4565,63 @@ MonoBehaviour:
   _resetGrabOnGrabsUpdated: 1
   _physicsGrabbable: {fileID: 0}
   _movementProvider: {fileID: 0}
+--- !u!114 &1878397003 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7608124824768266435, guid: f525d8cc2d85e0e45ba0ba3585ca9072, type: 3}
+  m_PrefabInstance: {fileID: 7958732756321232927}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1878396992}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 43f86b14a27b52f4f9298c33015b5c26, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Oculus.Interaction::Oculus.Interaction.Grabbable
+--- !u!54 &1878397004 stripped
+Rigidbody:
+  m_CorrespondingSourceObject: {fileID: 613909886800137201, guid: f525d8cc2d85e0e45ba0ba3585ca9072, type: 3}
+  m_PrefabInstance: {fileID: 7958732756321232927}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1878397008
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1878396992}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9a7676b01585ce43908639a27765dfc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Oculus.Interaction::Oculus.Interaction.HandGrab.HandGrabInteractable
+  _interactorFilters: []
+  _maxInteractors: -1
+  _maxSelectingInteractors: -1
+  _data: {fileID: 0}
+  _pointableElement: {fileID: 1878397003}
+  _rigidbody: {fileID: 1878397004}
+  _physicsGrabbable: {fileID: 0}
+  _resetGrabOnGrabsUpdated: 1
+  _scoringModifier:
+    _positionRotationWeight: 0.8
+  _slippiness: 0
+  _supportedGrabTypes: 3
+  _pinchGrabRules:
+    _thumbRequirement: 1
+    _indexRequirement: 1
+    _middleRequirement: 1
+    _ringRequirement: 0
+    _pinkyRequirement: 0
+    _unselectMode: 0
+  _palmGrabRules:
+    _thumbRequirement: 1
+    _indexRequirement: 2
+    _middleRequirement: 2
+    _ringRequirement: 2
+    _pinkyRequirement: 1
+    _unselectMode: 0
+  _movementProvider: {fileID: 0}
+  _handAligment: 1
+  _handGrabPoses: []
 --- !u!1 &1894443944
 GameObject:
   m_ObjectHideFlags: 0
@@ -8757,6 +8886,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 2826859769637671250, guid: f525d8cc2d85e0e45ba0ba3585ca9072, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1878397000}
+    - targetCorrespondingSourceObject: {fileID: 2826859769637671250, guid: f525d8cc2d85e0e45ba0ba3585ca9072, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1878397008}
     - targetCorrespondingSourceObject: {fileID: 1009553651982703282, guid: f525d8cc2d85e0e45ba0ba3585ca9072, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1908413798}
@@ -8970,6 +9102,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 6277411442439190863, guid: 5ba5b497bb5f35c418eff72b69089c23, type: 3}
       insertIndex: -1
       addedObject: {fileID: 319820765}
+    - targetCorrespondingSourceObject: {fileID: 6277411442439190863, guid: 5ba5b497bb5f35c418eff72b69089c23, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 319820772}
     - targetCorrespondingSourceObject: {fileID: 4963452730513680751, guid: 5ba5b497bb5f35c418eff72b69089c23, type: 3}
       insertIndex: -1
       addedObject: {fileID: 746706247}
@@ -9051,6 +9186,10 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: -268
       objectReference: {fileID: 0}
+    - target: {fileID: 1026502731826167083, guid: dd007df069898fd45b9fa0684e0530e8, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 1192566883043942557, guid: dd007df069898fd45b9fa0684e0530e8, type: 3}
       propertyPath: m_Enabled
       value: 1
@@ -9124,17 +9263,57 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1848740388}
     - target: {fileID: 4342917602473316964, guid: dd007df069898fd45b9fa0684e0530e8, type: 3}
+      propertyPath: normalColor.a
+      value: 0.54901963
+      objectReference: {fileID: 0}
+    - target: {fileID: 4342917602473316964, guid: dd007df069898fd45b9fa0684e0530e8, type: 3}
+      propertyPath: normalColor.b
+      value: 0.72
+      objectReference: {fileID: 0}
+    - target: {fileID: 4342917602473316964, guid: dd007df069898fd45b9fa0684e0530e8, type: 3}
+      propertyPath: normalColor.g
+      value: 0.72
+      objectReference: {fileID: 0}
+    - target: {fileID: 4342917602473316964, guid: dd007df069898fd45b9fa0684e0530e8, type: 3}
+      propertyPath: normalColor.r
+      value: 0.72
+      objectReference: {fileID: 0}
+    - target: {fileID: 4342917602473316964, guid: dd007df069898fd45b9fa0684e0530e8, type: 3}
       propertyPath: canvasRootRect
       value: 
       objectReference: {fileID: 687195750}
+    - target: {fileID: 4342917602473316964, guid: dd007df069898fd45b9fa0684e0530e8, type: 3}
+      propertyPath: hoveredColor.a
+      value: 0.78039217
+      objectReference: {fileID: 0}
+    - target: {fileID: 4342917602473316964, guid: dd007df069898fd45b9fa0684e0530e8, type: 3}
+      propertyPath: hoveredColor.b
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4342917602473316964, guid: dd007df069898fd45b9fa0684e0530e8, type: 3}
+      propertyPath: hoveredColor.g
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4342917602473316964, guid: dd007df069898fd45b9fa0684e0530e8, type: 3}
+      propertyPath: hoveredColor.r
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 4342917602473316964, guid: dd007df069898fd45b9fa0684e0530e8, type: 3}
       propertyPath: contentRootRect
       value: 
       objectReference: {fileID: 617446485}
     - target: {fileID: 4342917602473316964, guid: dd007df069898fd45b9fa0684e0530e8, type: 3}
+      propertyPath: selectedColor.a
+      value: 0.9019608
+      objectReference: {fileID: 0}
+    - target: {fileID: 4342917602473316964, guid: dd007df069898fd45b9fa0684e0530e8, type: 3}
       propertyPath: grabInteractable
       value: 
       objectReference: {fileID: 542475443}
+    - target: {fileID: 4342917602473316964, guid: dd007df069898fd45b9fa0684e0530e8, type: 3}
+      propertyPath: backgroundGraphic
+      value: 
+      objectReference: {fileID: 219789818}
     - target: {fileID: 4342917602473316964, guid: dd007df069898fd45b9fa0684e0530e8, type: 3}
       propertyPath: compactCanvasHeight
       value: 200

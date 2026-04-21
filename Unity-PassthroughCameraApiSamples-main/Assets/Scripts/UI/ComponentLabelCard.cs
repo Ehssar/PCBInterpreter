@@ -1,6 +1,7 @@
 using System;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 using Oculus.Interaction;
 
 public class ComponentLabelCard : MonoBehaviour
@@ -8,6 +9,14 @@ public class ComponentLabelCard : MonoBehaviour
     [Header("Visual")]
     [SerializeField] private GameObject visualRoot;
     [SerializeField] private Transform faceTargetRoot;
+
+    [Header("Translucency")]
+    [SerializeField] private Graphic backgroundGraphic;
+    [SerializeField] private float normalAlpha = 0.50f;
+    [SerializeField] private float hoveredAlpha = 0.65f;
+    [SerializeField] private float selectedAlpha = 0.80f;
+
+    private bool isPersistentlySelected = false;
 
     [Header("Sizing")]
     [SerializeField] private RectTransform canvasRootRect;
@@ -109,6 +118,7 @@ public class ComponentLabelCard : MonoBehaviour
 
         if (visualRoot != null)
             visualRoot.SetActive(true);
+            SetInteractionVisualState(false, false);
 
         initialized = true;
         SnapFacingUser();
@@ -306,6 +316,23 @@ public class ComponentLabelCard : MonoBehaviour
         {
             SnapFacingUser();
         }
+    }
+
+    public void SetInteractionVisualState(bool hovered, bool selected)
+    {
+        if (backgroundGraphic == null)
+            return;
+
+        Color c = backgroundGraphic.color;
+
+        if (selected)
+            c.a = selectedAlpha;
+        else if (hovered)
+            c.a = hoveredAlpha;
+        else
+            c.a = normalAlpha;
+
+        backgroundGraphic.color = c;
     }
 
     public void SnapFacingUser()
